@@ -1,0 +1,64 @@
+{
+  "name": "flowtract",
+  "version": "0.1.0-dev.0",
+  "private": true,
+  "description": "Schema-verified, stateful REST API workflows for TypeScript",
+  "license": "Apache-2.0",
+  "author": "Flowtract maintainers",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flowtract/flowtract.git",
+    "directory": "packages/flowtract"
+  },
+  "homepage": "https://github.com/flowtract/flowtract#readme",
+  "bugs": {
+    "url": "https://github.com/flowtract/flowtract/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": "^22.0.0 || ^24.0.0"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/types/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/types/esm/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/types/cjs/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "npm run clean && tsc -p tsconfig.build.json && node scripts/build.mjs",
+    "package:check": "node scripts/package-check.mjs",
+    "type-matrix": "node scripts/type-matrix.mjs"
+  },
+  "peerDependencies": {
+    "@cucumber/cucumber": "^13.0.0",
+    "playwright": "^1.62.0",
+    "zod": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@cucumber/cucumber": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^13.2.0",
+    "playwright": "^1.62.0",
+    "zod": "^4.4.3"
+  }
+}

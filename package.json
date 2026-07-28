@@ -1,0 +1,53 @@
+{
+  "name": "flowtract-workspace",
+  "version": "0.1.0-dev.0",
+  "private": true,
+  "description": "Flowtract open-source framework workspace",
+  "license": "Apache-2.0",
+  "author": "Flowtract maintainers",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flowtract/flowtract.git"
+  },
+  "homepage": "https://github.com/flowtract/flowtract#readme",
+  "bugs": {
+    "url": "https://github.com/flowtract/flowtract/issues"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "format": "prettier --write \"packages/**/*.{ts,mts,js,mjs,json,md}\" \".github/**/*.{yml,yaml,md}\" \"docs/**/*.md\" \"scripts/**/*.mjs\" README.md CHANGELOG.md package.json",
+    "format:check": "prettier --check \"packages/**/*.{ts,mts,js,mjs,json,md}\" \".github/**/*.{yml,yaml,md}\" \"docs/**/*.md\" \"scripts/**/*.mjs\" README.md CHANGELOG.md package.json",
+    "lint": "eslint packages/flowtract/src packages/flowtract/test --ext .ts",
+    "type-check": "tsc -p packages/flowtract/tsconfig.json",
+    "test": "vitest run --config packages/flowtract/vitest.config.mts",
+    "coverage": "vitest run --coverage --config packages/flowtract/vitest.config.mts",
+    "build": "npm run build --workspace flowtract",
+    "package:check": "npm run package:check --workspace flowtract",
+    "type-matrix": "npm run type-matrix --workspace flowtract",
+    "repository:check": "node scripts/repository-check.mjs",
+    "secret:check": "node scripts/secret-scan.mjs",
+    "clean-clone:check": "node scripts/clean-clone-check.mjs",
+    "qa": "node scripts/qa.mjs"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@types/node": "^24.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.65.0",
+    "@typescript-eslint/parser": "^8.65.0",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "@vitest/coverage-v8": "^4.1.10",
+    "esbuild": "^0.27.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.4",
+    "publint": "^0.3.22",
+    "rimraf": "^5.0.5",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "vitest": "^4.1.10"
+  },
+  "engines": {
+    "node": "^22.0.0 || ^24.0.0",
+    "npm": ">=10.0.0"
+  }
+}

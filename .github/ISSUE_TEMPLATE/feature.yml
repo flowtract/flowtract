@@ -1,0 +1,38 @@
+name: Feature proposal
+description: Propose a Flowtract capability grounded in a real workflow
+title: '[Proposal]: '
+labels: ['proposal', 'needs-triage']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and real workflow
+      description: Describe the testing problem without prescribing implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: users
+    attributes:
+      label: Who is affected?
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Current workaround and evidence
+    validations:
+      required: true
+  - type: textarea
+    id: boundary
+    attributes:
+      label: Product-boundary impact
+      description: Explain whether this changes REST scope, public API, security, or compatibility.
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope acknowledgement
+      options:
+        - label: I reviewed the v0.1 canonical scope and understand that roadmap requests are evidence-gated.
+          required: true

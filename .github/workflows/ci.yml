@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package-contract:
+    name: ${{ matrix.os }} / Node ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+        node:
+          - 22
+          - 24
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Check repository boundary
+        run: npm run repository:check
+
+      - name: Scan complete repository history for credentials
+        run: npm run secret:check
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint typed contracts
+        run: npm run lint
+
+      - name: Check TypeScript source and type contracts
+        run: npm run type-check
+
+      - name: Run unit coverage gate
+        run: npm run coverage
+
+      - name: Build dual-module package
+        run: npm run build
+
+      - name: Validate archive and clean consumers
+        run: npm run package:check
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Verify repository integrity
+        run: git diff --exit-code
+
+  declaration-matrix:
+    name: TypeScript declaration compatibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build package
+        run: npm run build
+
+      - name: Check TypeScript 5.5, 6.0, and 7.0 consumers
+        run: npm run type-matrix
+
+      - name: Verify repository integrity
+        run: git diff --exit-code
+
+  clean-clone:
+    name: Clean-clone proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Scan complete repository history for credentials
+        run: npm run secret:check
+
+      - name: Run isolated clean-clone proof
+        run: npm run clean-clone:check

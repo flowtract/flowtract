@@ -1,0 +1,20 @@
+{
+  "name": "create-flowtract",
+  "version": "0.1.0-dev.0",
+  "private": true,
+  "description": "Reserved Flowtract starter generator package for Gate 3",
+  "license": "Apache-2.0",
+  "author": "Flowtract maintainers",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flowtract/flowtract.git",
+    "directory": "packages/create-flowtract"
+  },
+  "homepage": "https://github.com/flowtract/flowtract#readme",
+  "bugs": {
+    "url": "https://github.com/flowtract/flowtract/issues"
+  },
+  "engines": {
+    "node": "^22.0.0 || ^24.0.0"
+  }
+}

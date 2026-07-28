@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+
+# Reports and generated artifacts
+reports/
+flowtract-results/
+coverage/
+packages/*/coverage/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+screenshots/
+videos/
+traces/
+test-results/
+.cache/
+
+# TypeScript
+*.tsbuildinfo
