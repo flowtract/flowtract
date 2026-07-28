@@ -27,6 +27,14 @@ Maintainers seek consensus. If consensus cannot be reached, the lead maintainer
 records the decision and rationale. Security matters use the private process in
 [SECURITY.md](SECURITY.md).
 
+## Protected branch bypass
+
+Maintainer bypass of protected-branch rules is permitted only to contain or
+remediate an active security incident. The maintainer must record the reason in
+the private vulnerability report, restore normal protections immediately after
+the emergency, and publish a safe post-incident record when disclosure is
+appropriate. Routine maintenance and releases never use bypass.
+
 ## Releases
 
 Only maintainers may publish. Releases must pass the gates in the canonical

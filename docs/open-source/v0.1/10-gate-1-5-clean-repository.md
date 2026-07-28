@@ -10,6 +10,8 @@
 | Accepted Gate 1 source | `fc304b12f88bd1f8cb7ae56d66220fad68769e72` |
 | Destination            | `flowtract/flowtract`                      |
 | Migration model        | Clean snapshot                             |
+| Public activation date | 2026-07-28                                 |
+| Repository status      | Public developer preview                   |
 
 Gate 1.5 supersedes the Gate 0 assumption that the prototype repository would
 be transferred with its history. The new repository begins from a reviewed
@@ -46,3 +48,25 @@ Gate 2 may begin only after:
 - the repository is public;
 - public CI, CodeQL, dependency review, and Scorecard activation pass;
 - the archived prototype remains private and recoverable.
+
+## Activation evidence
+
+The repository was created privately from one signed-off bootstrap commit and
+made public only after its extraction gate passed.
+
+| Proof                                        | Result                                                                    |
+| -------------------------------------------- | ------------------------------------------------------------------------- |
+| Ubuntu and Windows, Node.js 22 and 24        | Passed                                                                    |
+| TypeScript 5.5, 6.0, and 7.0 consumers       | Passed                                                                    |
+| Package archive, ESM, and CommonJS consumers | Passed                                                                    |
+| Coverage                                     | 100% statements, lines, and functions; 96.49% branches                    |
+| Production dependency audit                  | No vulnerabilities                                                        |
+| Complete-history credential scan             | Passed                                                                    |
+| Public CodeQL                                | [Passed](https://github.com/flowtract/flowtract/actions/runs/30387475472) |
+| Public OpenSSF Scorecard                     | [Passed](https://github.com/flowtract/flowtract/actions/runs/30387478025) |
+
+Organization-wide two-factor authentication, private vulnerability reporting,
+Dependabot security updates, secret scanning, push protection, and protected
+pull-request integration are enabled. The prototype repository remains private
+and recoverable until this activation record merges, after which it is archived
+without deletion.
