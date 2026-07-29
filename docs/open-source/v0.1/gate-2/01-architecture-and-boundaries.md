@@ -133,7 +133,11 @@ adapter tests may import Playwright.
   not queued implicitly.
 - Different scenarios may execute concurrently.
 - Provider setup for a profile is single-flight within its scenario.
-- Closing a scenario prevents new execution immediately.
+- Closing a scenario prevents new external execution immediately and waits for
+  the current operation to settle.
+- Cleanup actions receive a close-scoped `FlowtractClient` that may execute
+  operations through the same state, auth, and transport while external calls
+  remain blocked.
 - Repeated close calls share the first close promise and do not rerun cleanup or
   disposal.
 

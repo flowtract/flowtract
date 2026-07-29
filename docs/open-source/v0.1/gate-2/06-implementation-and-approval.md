@@ -221,12 +221,12 @@ To approve this Gate 2 specification, the repository owner must confirm:
 
 Approval is recorded below before implementation starts:
 
-| Field             | Value   |
-| ----------------- | ------- |
-| Decision          | Pending |
-| Approved by       | —       |
-| Approval date     | —       |
-| Approved revision | —       |
+| Field             | Value            |
+| ----------------- | ---------------- |
+| Decision          | Approved         |
+| Approved by       | Repository owner |
+| Approval date     | 2026-07-29       |
+| Approved revision | `ca990a9`        |
 
 ## Next action after approval
 

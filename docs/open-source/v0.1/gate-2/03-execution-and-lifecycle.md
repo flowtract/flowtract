@@ -254,14 +254,23 @@ bytes, full bodies, cookies, and auth headers are never attached.
 
 `registerCleanup` validates a non-empty label and pushes an action onto the
 scenario stack. Registration after close begins fails with `FLOWTRACT_CONFIG`.
+Each action receives a temporary `FlowtractClient` that can execute operations
+through the closing scenario. The client becomes invalid as soon as that action
+settles.
 
-Close performs:
+Close prevents new external execution, waits for the current external
+operation, then performs:
 
 1. all registered cleanup actions in reverse registration order;
 2. initialized auth-provider disposal in reverse initialization order;
 3. transport-session disposal;
 4. final redacted diagnostic snapshot;
 5. permanent transition to closed.
+
+Cleanup-client operations use history phase `cleanup`. They may lazily
+initialize an auth profile before provider disposal begins. They cannot mutate
+scenario state or register more cleanup actions except through effects of the
+executed operation and provider.
 
 Every action is attempted even after earlier failures. Failures are normalized
 to `{ label, message }` in execution order and aggregated into one

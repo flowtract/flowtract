@@ -1,6 +1,6 @@
 # Flowtract Open-Source v0.1 Canonical Specification
 
-> **Status:** Approved base specification; Gate 2 proposed for approval
+> **Status:** Approved specification; Gate 2 implementation authorized
 > **Product:** Flowtract
 > **Release target:** `0.1.0` developer preview
 > **Positioning:** Test contracts in motion.
@@ -72,5 +72,7 @@ Gate 0 is complete only when:
 
 Gate 1 was accepted at source revision `fc304b1`. Gate 1.5 replaced the
 repository-transfer assumption with a reviewed clean extraction and completed
-public activation at `090ec2e`. The Gate 2 specification is proposed but not
-approved for implementation. npm publication remains separately gated.
+public activation at `090ec2e`. The Gate 2 specification was approved for
+implementation on 2026-07-29 against revision `ca990a9`, including the
+close-scoped cleanup-client amendment. npm publication remains separately
+gated.

@@ -93,7 +93,7 @@ interface FlowtractScenario extends FlowtractClient {
   require(name: string): unknown;
   has(name: string): boolean;
 
-  registerCleanup(label: string, action: () => void | Promise<void>): void;
+  registerCleanup(label: string, action: (client: FlowtractClient) => void | Promise<void>): void;
   history(): readonly OperationSummary[];
   diagnostics(): readonly DiagnosticEvent[];
   close(): Promise<void>;
@@ -383,7 +383,7 @@ during interpolation.
 ```ts
 interface OperationSummary {
   readonly operationId: string;
-  readonly phase: 'auth' | 'operation';
+  readonly phase: 'auth' | 'operation' | 'cleanup';
   readonly startedAt: string;
   readonly durationMs: number;
   readonly status: number;
@@ -412,5 +412,6 @@ interface DiagnosticEvent {
 ```
 
 History contains successful contract-matched HTTP exchanges only, including
-auth setup exchanges with `phase: "auth"`. Diagnostics contain no raw request
-or response body by default and are already redacted when exposed.
+auth setup exchanges with `phase: "auth"` and cleanup-client exchanges with
+`phase: "cleanup"`. Diagnostics contain no raw request or response body by
+default and are already redacted when exposed.

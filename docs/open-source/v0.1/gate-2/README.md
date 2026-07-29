@@ -1,8 +1,11 @@
 # Gate 2 — Execution Foundation
 
-> **Status:** Proposed for repository-owner approval  
-> **Gate:** 2 of the Flowtract `0.1.0` developer preview  
-> **Implementation authorization:** Not granted  
+> **Status:** Approved for implementation
+>
+> **Gate:** 2 of the Flowtract `0.1.0` developer preview
+>
+> **Implementation authorization:** Granted 2026-07-29
+>
 > **Canonical parent:** [Flowtract Open-Source v0.1](../README.md)
 
 ## Objective
