@@ -130,25 +130,58 @@ export type OperationResult<Operation extends OperationDefinition> = {
   >;
 }[keyof ResponsesOf<Operation>];
 
-interface FlowtractExecutionOptions {
+export interface FlowtractExecutionOptions {
   readonly auth?: string | false;
   readonly timeoutMs?: number;
   readonly headers?: Readonly<Record<string, unknown>>;
   readonly signal?: AbortSignal;
-  readonly dryRun?: boolean;
   readonly unsafe?: {
     readonly skipRequestValidation?: boolean;
   };
 }
 
-type ExecuteArguments<Operation extends OperationDefinition> =
+export interface DryRunResult<Operation extends OperationDefinition> {
+  readonly operationId: OperationId<Operation>;
+  readonly dryRun: true;
+  readonly method: Operation['method'];
+  readonly url: string;
+  readonly headerNames: readonly string[];
+  readonly bodyPresent: boolean;
+  readonly timeoutMs: number;
+  readonly auth: string | false;
+  readonly warnings: readonly string[];
+}
+
+export type ExecuteArguments<
+  Operation extends OperationDefinition,
+  Options extends FlowtractExecutionOptions & { readonly dryRun?: boolean }
+> =
   Record<string, never> extends OperationInput<Operation>
-    ? readonly [input?: OperationInput<Operation>, options?: FlowtractExecutionOptions]
-    : readonly [input: OperationInput<Operation>, options?: FlowtractExecutionOptions];
+    ? readonly [input?: OperationInput<Operation>, options?: Options]
+    : readonly [input: OperationInput<Operation>, options?: Options];
+
+export type DryRunExecuteArguments<Operation extends OperationDefinition> =
+  Record<string, never> extends OperationInput<Operation>
+    ? readonly [
+        input: OperationInput<Operation> | undefined,
+        options: FlowtractExecutionOptions & { readonly dryRun: true }
+      ]
+    : readonly [
+        input: OperationInput<Operation>,
+        options: FlowtractExecutionOptions & { readonly dryRun: true }
+      ];
 
 export interface FlowtractClient {
   execute<const Operation extends OperationDefinition>(
     operation: Operation,
-    ...arguments_: ExecuteArguments<Operation>
+    ...arguments_: DryRunExecuteArguments<Operation>
+  ): Promise<DryRunResult<Operation>>;
+
+  execute<const Operation extends OperationDefinition>(
+    operation: Operation,
+    ...arguments_: ExecuteArguments<
+      Operation,
+      FlowtractExecutionOptions & { readonly dryRun?: false }
+    >
   ): Promise<OperationResult<Operation>>;
 }

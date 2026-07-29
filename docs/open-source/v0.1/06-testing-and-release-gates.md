@@ -132,6 +132,9 @@ the package, compiler, CodeQL, and Scorecard proof.
 
 ### Gate 2 — execution foundation
 
+**Implementation status:** implemented and locally proof-gated; cross-platform
+CI and pull-request review remain required for acceptance.
+
 - canonical Gate 2 specification approved;
 - transport port and Playwright adapter complete;
 - scenario, auth, interpolation, cleanup, redaction, and secure config complete;

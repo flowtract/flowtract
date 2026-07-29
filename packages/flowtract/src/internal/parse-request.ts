@@ -89,3 +89,31 @@ export function parseOperationInput<Operation extends OperationDefinition>(
 
   return parsed as ParsedOperationInput<Operation>;
 }
+
+export function validateOperationInputShape(
+  operation: OperationDefinition,
+  input: unknown
+): Readonly<Record<string, unknown>> {
+  if (
+    input !== undefined &&
+    (typeof input !== 'object' || input === null || Array.isArray(input))
+  ) {
+    requestError(operation.id, 'input', 'Request input must be an object.', [
+      { path: [], message: 'Expected a request input object.', code: 'invalid_input' }
+    ]);
+  }
+  const raw: Readonly<Record<string, unknown>> =
+    input === undefined ? {} : (input as Readonly<Record<string, unknown>>);
+  const request = operation.request;
+  for (const key of Object.keys(raw)) {
+    if (
+      !REQUEST_SECTIONS.includes(key as RequestSection) ||
+      request?.[key as RequestSection] === undefined
+    ) {
+      requestError(operation.id, 'input', `Request section "${key}" is not declared.`, [
+        { path: [key], message: 'Undeclared request section.', code: 'unrecognized_section' }
+      ]);
+    }
+  }
+  return raw;
+}

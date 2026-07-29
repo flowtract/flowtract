@@ -1,6 +1,6 @@
 # Gate 2 — Execution Foundation
 
-> **Status:** Approved for implementation
+> **Status:** Implemented locally; acceptance pending CI and review
 >
 > **Gate:** 2 of the Flowtract `0.1.0` developer preview
 >
@@ -16,8 +16,8 @@ It must prove:
 > Flowtract can execute authenticated, stateful, schema-verified REST workflows
 > safely, deterministically, and in parallel.
 
-The implementation may begin only after the approval record in
-[06-implementation-and-approval.md](06-implementation-and-approval.md) is
+The implementation began after the approval record in
+[06-implementation-and-approval.md](06-implementation-and-approval.md) was
 completed.
 
 ## Required outcome

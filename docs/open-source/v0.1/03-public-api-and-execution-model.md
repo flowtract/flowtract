@@ -17,9 +17,10 @@ The main `flowtract` entry point exports:
 
 `flowtract/cucumber` and `flowtract/testing` are specified separately.
 
-The decision-complete Gate 2 signatures and lifecycle refinements are proposed
-in the [Gate 2 public contracts](gate-2/02-public-contracts.md). They remain
-unimplemented until the Gate 2 approval record is completed.
+The decision-complete Gate 2 signatures and lifecycle refinements are defined
+in the [Gate 2 public contracts](gate-2/02-public-contracts.md) and implemented
+on the Gate 2 branch. Cross-platform CI and pull-request review remain required
+before acceptance.
 
 ## Operation definition
 

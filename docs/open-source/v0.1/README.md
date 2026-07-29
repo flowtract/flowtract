@@ -1,6 +1,6 @@
 # Flowtract Open-Source v0.1 Canonical Specification
 
-> **Status:** Approved specification; Gate 2 implementation authorized
+> **Status:** Gate 2 implemented locally; acceptance pending CI and review
 > **Product:** Flowtract
 > **Release target:** `0.1.0` developer preview
 > **Positioning:** Test contracts in motion.
@@ -74,5 +74,6 @@ Gate 1 was accepted at source revision `fc304b1`. Gate 1.5 replaced the
 repository-transfer assumption with a reviewed clean extraction and completed
 public activation at `090ec2e`. The Gate 2 specification was approved for
 implementation on 2026-07-29 against revision `ca990a9`, including the
-close-scoped cleanup-client amendment. npm publication remains separately
-gated.
+close-scoped cleanup-client amendment. The implementation is locally
+proof-gated; pull-request review and the Windows/Ubuntu Node 22/24 matrix remain
+acceptance prerequisites. npm publication remains separately gated.

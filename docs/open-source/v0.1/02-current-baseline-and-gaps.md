@@ -9,12 +9,20 @@ The clean Flowtract repository currently provides:
 - exact and default response-contract result unions;
 - stable public error codes and JSON shapes;
 - scoped duplicate-operation detection;
+- immutable reusable runtimes and isolated, closeable scenarios;
+- request interpolation, schema parsing, normalization, and typed dry runs;
+- Playwright-backed HTTP execution through a public transport port;
+- bearer, API-key, basic, and session/CSRF authentication;
+- scenario-local secrets, redacted diagnostics, history, and LIFO cleanup;
 - dual ESM/CommonJS builds with declarations and source maps;
 - clean packed-package proofs for JavaScript and TypeScript consumers.
 
-The Gate 1 package does not yet execute HTTP requests. The previous prototype
-is retained in a private archived repository as historical behavioral evidence.
-It is not part of the public source tree or package dependency graph.
+The Gate 2 branch executes authenticated HTTP/HTTPS workflows and proves eight
+parallel session-isolated CRUD scenarios against an ephemeral in-process
+service. Cross-platform CI and pull-request review remain required before Gate
+2 acceptance. The previous prototype is retained in a private archived
+repository as historical behavioral evidence; it is not part of the public
+source tree or package dependency graph.
 
 ## Architectural gaps
 
@@ -45,8 +53,10 @@ The archived prototype lifecycle:
 Gate 0 added the license, governance policies, security workflows, and
 canonical specification. Gate 1 added package-consumer tests and a
 Windows/Ubuntu Node 22/24 CI definition. Gate 1.5 moved that foundation into a
-clean `flowtract/flowtract` repository. npm publication and trusted publishing
-remain future external actions.
+clean `flowtract/flowtract` repository. Gate 2 adds the execution foundation
+without expanding into Cucumber, CLI, configuration-file loading, retry, or
+reporting. npm publication and trusted publishing remain future external
+actions.
 
 ## v0.1 Target
 

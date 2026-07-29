@@ -1,39 +1,84 @@
 export const packageJson = {
-  name: 'flowtract-gate1-consumer',
+  name: 'flowtract-gate2-consumer',
   version: '1.0.0',
   private: true,
   type: 'module'
 };
 
 export const esmRuntime = `
-import { defineOperation, emptyBody } from 'flowtract';
+import { createServer } from 'node:http';
+import { bearerToken, createFlowtract, defineOperation } from 'flowtract';
 import { z } from 'zod';
 
 const operation = defineOperation({
-  id: 'health.get',
+  id: 'secured.get',
   method: 'GET',
-  path: '/health',
-  responses: { 204: { body: emptyBody() } }
+  path: '/secured',
+  auth: 'bearer',
+  responses: { 200: { body: z.object({ ok: z.literal(true) }) } }
 });
-
-if (operation.id !== 'health.get' || operation.responses[204].body.parse(undefined) !== undefined) {
-  throw new Error('ESM Flowtract consumer failed');
+const server = createServer((request, response) => {
+  const ok = request.headers.authorization === 'Bearer packed-secret';
+  response.writeHead(ok ? 200 : 401, { 'content-type': 'application/json' });
+  response.end(JSON.stringify({ ok }));
+});
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+try {
+  const address = server.address();
+  if (address === null || typeof address === 'string') throw new Error('Missing address');
+  const runtime = createFlowtract({
+    baseURL: \`http://127.0.0.1:\${address.port}\`,
+    operations: [operation],
+    auth: { bearer: bearerToken({ token: 'packed-secret' }) }
+  });
+  const result = await runtime.runScenario(scenario => scenario.execute(operation));
+  if (result.status !== 200 || result.body.ok !== true) {
+    throw new Error('ESM Flowtract consumer failed');
+  }
+} finally {
+  await new Promise((resolve, reject) =>
+    server.close(error => error === undefined ? resolve() : reject(error))
+  );
 }
 `;
 
 export const cjsRuntime = `
-const { defineOperation, emptyBody } = require('flowtract');
+const { createFlowtract, defineOperation } = require('flowtract');
+const { z } = require('zod');
 
 const operation = defineOperation({
   id: 'health.get',
   method: 'GET',
   path: '/health',
-  responses: { 204: { body: emptyBody() } }
+  responses: { 200: { body: z.object({ ok: z.literal(true) }) } }
 });
 
-if (operation.id !== 'health.get' || operation.responses[204].body.parse(undefined) !== undefined) {
-  throw new Error('CommonJS Flowtract consumer failed');
-}
+const transport = {
+  async createSession() {
+    return {
+      async execute(request) {
+        return {
+          status: 200,
+          headers: [['content-type', 'application/json']],
+          body: new TextEncoder().encode(JSON.stringify({ ok: true })),
+          url: request.url,
+          durationMs: 1
+        };
+      },
+      async dispose() {}
+    };
+  }
+};
+
+createFlowtract({
+  baseURL: 'http://consumer.local',
+  operations: [operation],
+  transport
+}).runScenario(scenario => scenario.execute(operation)).then(result => {
+  if (result.status !== 200 || result.body.ok !== true) {
+    throw new Error('CommonJS Flowtract consumer failed');
+  }
+});
 `;
 
 export const typescriptEsm = `
@@ -47,10 +92,14 @@ import {
   type ContractIssue,
   type DuplicateOperationErrorDetails,
   type FlowtractClient,
+  type FlowtractConfig,
   type FlowtractErrorCode,
   type FlowtractErrorJson,
   type FlowtractErrorOptions,
   type HttpMethod,
+  type HttpTransport,
+  type FlowtractRuntime,
+  type FlowtractScenario,
   type InterpolationErrorDetails,
   type OperationDefinition,
   type OperationInput,
@@ -59,6 +108,8 @@ import {
   type ResponseContractErrorDetails,
   type ResponseParseErrorDetails,
   type TransportErrorDetails,
+  type TransportRequest,
+  type TransportResponse,
   type UndeclaredStatusErrorDetails
 } from 'flowtract';
 
@@ -79,6 +130,9 @@ const operation = defineOperation({
 });
 
 declare const client: FlowtractClient;
+declare const runtime: FlowtractRuntime;
+declare const scenario: FlowtractScenario;
+declare const transport: HttpTransport;
 type Result = OperationResult<typeof operation>;
 const checkResult = (result: Result): string => {
   if (result.contractStatus === 201) return result.body.id;
@@ -96,6 +150,7 @@ type PublicTypes = [
   FlowtractErrorCode,
   FlowtractErrorJson<'FLOWTRACT_CONFIG', ConfigErrorDetails>,
   FlowtractErrorOptions<ConfigErrorDetails>,
+  FlowtractConfig,
   HttpMethod,
   InterpolationErrorDetails,
   OperationDefinition,
@@ -104,13 +159,23 @@ type PublicTypes = [
   ResponseContractErrorDetails,
   ResponseParseErrorDetails,
   TransportErrorDetails,
+  TransportRequest,
+  TransportResponse,
   UndeclaredStatusErrorDetails
 ];
 declare const publicTypes: PublicTypes;
 void publicTypes;
+void runtime;
+void scenario;
+void transport;
 
 if (false) {
   client.execute(operation, { body: { quantity: '4' } }).then(checkResult);
+  client.execute(
+    operation,
+    { body: { quantity: '4' } },
+    { dryRun: true }
+  ).then(result => result.dryRun);
 }
 `;
 
