@@ -24,10 +24,13 @@ migration guidance.
   contracts.
 - Clean Gate 1.5 extraction into `flowtract/flowtract` without prototype
   history, runtime code, mutable fixtures, or legacy dependencies.
+- Proposed decision-complete Gate 2 execution-foundation specification covering
+  public runtime/transport/auth contracts, scenario lifecycle, interpolation,
+  cleanup, redaction, proof service, verification matrix, and approval gate.
 
 ### Current limitations
 
-- Gate 1 package and typed-contract work is authorized; transport and runner
-  integration remain deferred to later gates.
+- Gate 1 package and typed-contract work is accepted. Gate 2 transport/runtime
+  implementation remains blocked pending specification approval.
 - The legacy prototype is retained privately as historical behavioral evidence.
 - No npm package or production-ready release exists.
