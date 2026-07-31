@@ -248,6 +248,26 @@ describe('Playwright Gate 2 proof', () => {
     });
   });
 
+  it('does not expose internal exception details in responses or diagnostics', async () => {
+    const InternalError = defineOperation({
+      id: 'proof.internal-error',
+      method: 'GET',
+      path: '/responses/internal-error',
+      responses: { 500: { body: z.object({ message: z.literal('server error') }) } }
+    });
+    const runtime = createFlowtract({
+      baseURL: server.baseURL,
+      operations: [InternalError]
+    });
+
+    await runtime.runScenario(async scenario => {
+      const result = await scenario.execute(InternalError);
+      expect(result).toMatchObject({ status: 500, body: { message: 'server error' } });
+      expect(JSON.stringify(result)).not.toContain(server.internalFailureMarker);
+      expect(JSON.stringify(scenario.diagnostics())).not.toContain(server.internalFailureMarker);
+    });
+  });
+
   it('keeps TLS verification secure by default and allows explicit opt-out', async () => {
     const Text = defineOperation({
       id: 'proof.tls',

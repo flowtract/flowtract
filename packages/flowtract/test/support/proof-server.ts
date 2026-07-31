@@ -36,6 +36,7 @@ function cookie(request: IncomingMessage, name: string): string | undefined {
 export interface ProofServer {
   readonly baseURL: string;
   readonly secureURL: string;
+  readonly internalFailureMarker: string;
   readonly credentials: {
     readonly username: string;
     readonly password: string;
@@ -53,6 +54,7 @@ export interface ProofServer {
 }
 
 export async function startProofServer(): Promise<ProofServer> {
+  const internalFailureMarker = `internal-failure-${randomUUID()}`;
   const credentials = Object.freeze({
     username: `user-${randomUUID()}`,
     password: `password-${randomUUID()}`,
@@ -122,6 +124,9 @@ export async function startProofServer(): Promise<ProofServer> {
         send(response, 200, { ok: true });
         return;
       }
+      if (url.pathname === '/responses/internal-error') {
+        throw new Error(internalFailureMarker);
+      }
 
       const session = sessions.get(cookie(request, 'session') ?? '');
       if (session === undefined) {
@@ -172,8 +177,8 @@ export async function startProofServer(): Promise<ProofServer> {
         return;
       }
       send(response, 404, { message: 'not found' });
-    } catch (error) {
-      send(response, 500, { message: error instanceof Error ? error.message : 'server error' });
+    } catch {
+      send(response, 500, { message: 'server error' });
     } finally {
       activeRequests -= 1;
     }
@@ -221,6 +226,7 @@ export async function startProofServer(): Promise<ProofServer> {
   return {
     baseURL: `http://127.0.0.1:${httpAddress.port}`,
     secureURL: `https://127.0.0.1:${httpsAddress.port}`,
+    internalFailureMarker,
     credentials,
     get stats() {
       return {
