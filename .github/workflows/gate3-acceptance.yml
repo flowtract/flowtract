@@ -1,6 +1,12 @@
 name: Gate 3 Acceptance
 
 on:
+  workflow_call:
+    inputs:
+      expected_sha:
+        description: Full immutable candidate SHA to verify
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       expected_sha:

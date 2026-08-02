@@ -6,6 +6,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Optional full Gate 3 candidate SHA for manual acceptance
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -160,3 +165,9 @@ jobs:
 
       - name: Verify repository integrity
         run: git diff --exit-code
+
+  gate3-acceptance:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.expected_sha != '' }}
+    uses: ./.github/workflows/gate3-acceptance.yml
+    with:
+      expected_sha: ${{ inputs.expected_sha }}
