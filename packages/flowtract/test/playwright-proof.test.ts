@@ -1,3 +1,5 @@
+import { createServer } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { z } from 'zod';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
@@ -241,10 +243,94 @@ describe('Playwright Gate 2 proof', () => {
         details: { kind: 'timeout' }
       });
       const controller = new AbortController();
-      controller.abort();
-      await expect(
-        scenario.execute(Delay, undefined, { signal: controller.signal })
-      ).rejects.toMatchObject({ details: { kind: 'abort' } });
+      const aborted = scenario.execute(Delay, undefined, { signal: controller.signal });
+      setTimeout(() => controller.abort(), 20);
+      await expect(aborted).rejects.toMatchObject({ details: { kind: 'abort' } });
+    });
+  });
+
+  it('enforces redirect bounds and classifies connection failures as network errors', async () => {
+    const Redirect = defineOperation({
+      id: 'proof.redirect',
+      method: 'GET',
+      path: '/responses/redirect',
+      request: { query: z.object({ remaining: z.number() }) },
+      responses: { 200: { body: z.object({ ok: z.literal(true) }) } }
+    });
+    const redirectRuntime = createFlowtract({
+      baseURL: server.baseURL,
+      operations: [Redirect]
+    });
+    await redirectRuntime.runScenario(async scenario => {
+      await expect(scenario.execute(Redirect, { query: { remaining: 20 } })).resolves.toMatchObject(
+        { status: 200 }
+      );
+      await expect(scenario.execute(Redirect, { query: { remaining: 21 } })).rejects.toMatchObject({
+        details: { kind: 'network' }
+      });
+    });
+
+    const unavailable = createServer();
+    await new Promise<void>((resolve, reject) => {
+      unavailable.once('error', reject);
+      unavailable.listen(0, '127.0.0.1', resolve);
+    });
+    const address = unavailable.address() as AddressInfo;
+    await new Promise<void>((resolve, reject) =>
+      unavailable.close(error => (error === undefined ? resolve() : reject(error)))
+    );
+    const Network = defineOperation({
+      id: 'proof.network',
+      method: 'GET',
+      path: '/unavailable',
+      responses: { 200: { body: z.unknown() } }
+    });
+    const networkRuntime = createFlowtract({
+      baseURL: `http://127.0.0.1:${address.port}`,
+      operations: [Network]
+    });
+    await expect(
+      networkRuntime.runScenario(scenario => scenario.execute(Network))
+    ).rejects.toMatchObject({ details: { kind: 'network' } });
+  });
+
+  it('normalizes repeated headers and preserves declared HTTP error statuses', async () => {
+    const Repeated = defineOperation({
+      id: 'proof.repeated',
+      method: 'GET',
+      path: '/responses/repeated-headers',
+      responses: {
+        200: {
+          body: z.object({ ok: z.literal(true) }),
+          headers: z.object({ 'x-proof-repeat': z.string() })
+        }
+      }
+    });
+    const Status = defineOperation({
+      id: 'proof.status',
+      method: 'GET',
+      path: '/responses/status',
+      request: { query: z.object({ code: z.number() }) },
+      responses: {
+        404: { body: z.object({ message: z.literal('status 404') }) },
+        503: { body: z.object({ message: z.literal('status 503') }) }
+      }
+    });
+    const runtime = createFlowtract({
+      baseURL: server.baseURL,
+      operations: [Repeated, Status]
+    });
+    await runtime.runScenario(async scenario => {
+      const repeated = await scenario.execute(Repeated);
+      expect(repeated.headers['x-proof-repeat']).toBe('first, second');
+      await expect(scenario.execute(Status, { query: { code: 404 } })).resolves.toMatchObject({
+        status: 404,
+        contractStatus: 404
+      });
+      await expect(scenario.execute(Status, { query: { code: 503 } })).resolves.toMatchObject({
+        status: 503,
+        contractStatus: 503
+      });
     });
   });
 

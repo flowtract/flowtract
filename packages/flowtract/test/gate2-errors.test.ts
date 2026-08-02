@@ -136,6 +136,44 @@ describe('Gate 2 configuration failures', () => {
     expect(Object.isFrozen(config.redaction?.headers)).toBe(true);
   });
 
+  it('snapshots mutable redaction input for the runtime', async () => {
+    const headers = ['x-original'];
+    const jsonPaths = ['nested.secret'];
+    const redaction = { headers, jsonPaths, previewCharacters: 7 };
+    const runtime = createFlowtract({
+      baseURL: 'http://example.com',
+      operations: [Health],
+      transport: {
+        async createSession() {
+          return {
+            async execute(request) {
+              return {
+                status: 200,
+                headers: [['content-type', 'application/json']],
+                body: new TextEncoder().encode('123456789 malformed'),
+                url: request.url,
+                durationMs: 1
+              };
+            },
+            async dispose() {}
+          };
+        }
+      },
+      redaction
+    });
+    headers[0] = 'x-mutated';
+    jsonPaths[0] = 'nested.public';
+    redaction.previewCharacters = 0;
+
+    const scenario = await runtime.createScenario();
+    await expect(scenario.execute(Health)).rejects.toMatchObject({
+      details: { preview: '1234567' }
+    });
+    await scenario.close();
+    expect(headers).toEqual(['x-mutated']);
+    expect(jsonPaths).toEqual(['nested.public']);
+  });
+
   it('rejects invalid redaction configuration', () => {
     for (const previewCharacters of [-1, 8193, 1.5]) {
       expect(() =>
@@ -269,6 +307,15 @@ describe('response and transport failures', () => {
     { url: 'not-a-url' }
   ])('rejects invalid transport output %#', overrides => {
     expect(() => parse(overrides)).toThrow(TransportError);
+  });
+
+  it.each([
+    [[['bad name', 'value']]],
+    [[['x-valid', 'line\nbreak']]],
+    [[['x-valid'] as never]],
+    [[['x-valid', 1] as never]]
+  ])('rejects malformed transport header tuples %#', headers => {
+    expect(() => parse({ headers: headers as never })).toThrow(TransportError);
   });
 
   it('rejects content type, header, body, encoding, and unsupported media failures', () => {

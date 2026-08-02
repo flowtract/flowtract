@@ -56,8 +56,17 @@ export interface AuthCreateContext {
   readonly scenarioId: string;
 }
 
-export interface AuthSetupContext extends FlowtractClient {
+type AuthSetupExecuteArguments<Operation extends OperationDefinition> =
+  Record<string, never> extends OperationInput<Operation>
+    ? readonly [input?: OperationInput<Operation>]
+    : readonly [input: OperationInput<Operation>];
+
+export interface AuthSetupContext {
   readonly state: AuthStateAccess;
+  execute<const Operation extends OperationDefinition>(
+    operation: Operation,
+    ...arguments_: AuthSetupExecuteArguments<Operation>
+  ): Promise<OperationResult<Operation>>;
 }
 
 export interface MutableAuthRequest {

@@ -104,8 +104,14 @@ export class Redactor {
         candidate.forEach((item, index) => output.push(visit(item, [...path, String(index)])));
         return Object.freeze(output);
       }
-      if (Object.getPrototypeOf(candidate) !== Object.prototype) {
-        return `[${candidate.constructor?.name ?? 'Object'}]`;
+      let prototype: object | null;
+      try {
+        prototype = Object.getPrototypeOf(candidate);
+      } catch {
+        return '[Object]';
+      }
+      if (prototype !== Object.prototype) {
+        return '[Object]';
       }
       const output: Record<string, unknown> = {};
       seen.set(candidate, output);

@@ -24,6 +24,7 @@ import type {
   TransportResponse
 } from '../runtime-types.js';
 import type { SecretTracker } from './state.js';
+import { authSecretRegistrar } from './state.js';
 import type { Redactor } from './redaction.js';
 
 function issue(path: readonly (string | number)[], message: string, code: string): ContractIssue {
@@ -117,14 +118,28 @@ export function prepareOperationInput<Operation extends OperationDefinition>(
   operation: Operation,
   input: OperationInput<Operation> | undefined,
   options: FlowtractExecutionOptions & { readonly dryRun?: boolean },
-  interpolated: unknown
+  interpolated: unknown,
+  redactor?: Redactor,
+  taintedSections: ReadonlySet<string> = new Set(),
+  secrets?: SecretTracker
 ): ParsedOperationInput<Operation> {
   const shaped = validateOperationInputShape(operation, interpolated);
   const merged = mergeHeaders(operation, shaped, options.headers);
-  if (options.unsafe?.skipRequestValidation === true) {
-    return merged as ParsedOperationInput<Operation>;
+  const parsed =
+    options.unsafe?.skipRequestValidation === true
+      ? (merged as ParsedOperationInput<Operation>)
+      : parseOperationInput(
+          operation,
+          merged as OperationInput<Operation>,
+          redactor,
+          taintedSections
+        );
+  if (secrets !== undefined) {
+    for (const section of taintedSections) {
+      secrets.add((parsed as Readonly<Record<string, unknown>>)[section]);
+    }
   }
-  return parseOperationInput(operation, merged as OperationInput<Operation>);
+  return parsed;
 }
 
 type QueryValue = string | readonly string[];
@@ -293,6 +308,10 @@ export class RequestBuilder implements MutableAuthRequest {
     this.#headers.set(normalized, value);
   }
 
+  [authSecretRegistrar](value: unknown): void {
+    this.secrets.add(value);
+  }
+
   setQuery(name: string, value: string | readonly string[]): void {
     if (name.length === 0 || this.#query.has(name)) {
       throw new AuthError(`Authentication query key "${name}" collides with request input.`, {
@@ -323,9 +342,9 @@ export class RequestBuilder implements MutableAuthRequest {
       method: this.operation.method,
       url: this.url(),
       headers: Object.freeze(
-        [...this.#headers].map(([name, value]) => [name, value] as TransportHeader)
+        [...this.#headers].map(([name, value]) => Object.freeze([name, value]) as TransportHeader)
       ),
-      ...(this.body === undefined ? {} : { body: this.body }),
+      ...(this.body === undefined ? {} : { body: new Uint8Array(this.body) }),
       timeoutMs: this.timeoutMs,
       ...(this.signal === undefined ? {} : { signal: this.signal })
     };
@@ -347,18 +366,26 @@ function mediaType(headers: Readonly<Record<string, string>>): string | undefine
   return headers['content-type']?.split(';', 1)[0]?.trim().toLowerCase();
 }
 
-function normalizeZodIssues(error: {
-  issues: readonly { path: readonly PropertyKey[]; message: string; code: string }[];
-}): readonly ContractIssue[] {
+function normalizeZodIssues(
+  error: {
+    issues: readonly { path: readonly PropertyKey[]; message: string; code: string }[];
+  },
+  redactor: Redactor
+): readonly ContractIssue[] {
   return error.issues.map(item => ({
     path: item.path.map(part => (typeof part === 'symbol' ? String(part) : part)),
-    message: item.message,
+    message: redactor.text(item.message),
     code: item.code
   }));
 }
 
-function validateTransport(operation: OperationDefinition, response: TransportResponse): void {
+function validateTransport(
+  operation: OperationDefinition,
+  response: TransportResponse
+): TransportResponse {
   if (
+    response === null ||
+    typeof response !== 'object' ||
     !Number.isInteger(response.status) ||
     response.status < 100 ||
     response.status > 599 ||
@@ -372,6 +399,22 @@ function validateTransport(operation: OperationDefinition, response: TransportRe
       details: { kind: 'unknown' }
     });
   }
+  const headers = response.headers.map((header, index) => {
+    if (
+      !Array.isArray(header) ||
+      header.length !== 2 ||
+      typeof header[0] !== 'string' ||
+      typeof header[1] !== 'string' ||
+      !validHeaderName(header[0]) ||
+      /[\r\n]/u.test(header[1])
+    ) {
+      throw new TransportError(`Transport returned an invalid header at index ${index}.`, {
+        operationId: operation.id,
+        details: { kind: 'unknown' }
+      });
+    }
+    return Object.freeze([header[0], header[1]]) as TransportHeader;
+  });
   try {
     const url = new URL(response.url);
     if (!['http:', 'https:'].includes(url.protocol)) throw new Error('invalid protocol');
@@ -382,6 +425,13 @@ function validateTransport(operation: OperationDefinition, response: TransportRe
       cause: error
     });
   }
+  return Object.freeze({
+    status: response.status,
+    headers: Object.freeze(headers),
+    body: new Uint8Array(response.body),
+    url: response.url,
+    durationMs: response.durationMs
+  });
 }
 
 export function parseOperationResponse<Operation extends OperationDefinition>(
@@ -389,23 +439,26 @@ export function parseOperationResponse<Operation extends OperationDefinition>(
   response: TransportResponse,
   redactor: Redactor
 ): OperationResult<Operation> {
-  validateTransport(operation, response);
-  const exact = operation.responses[response.status];
-  const contractStatus: number | 'default' = exact === undefined ? 'default' : response.status;
+  const safeResponse = validateTransport(operation, response);
+  const exact = operation.responses[safeResponse.status];
+  const contractStatus: number | 'default' = exact === undefined ? 'default' : safeResponse.status;
   const contract = (exact ?? operation.responses.default) as ResponseContract | undefined;
   if (contract === undefined) {
-    throw new UndeclaredStatusError(`Operation returned undeclared status ${response.status}.`, {
-      operationId: operation.id,
-      details: {
-        status: response.status,
-        declaredStatuses: Object.keys(operation.responses)
-          .filter(key => key !== 'default')
-          .map(Number),
-        hasDefault: operation.responses.default !== undefined
+    throw new UndeclaredStatusError(
+      `Operation returned undeclared status ${safeResponse.status}.`,
+      {
+        operationId: operation.id,
+        details: {
+          status: safeResponse.status,
+          declaredStatuses: Object.keys(operation.responses)
+            .filter(key => key !== 'default')
+            .map(Number),
+          hasDefault: operation.responses.default !== undefined
+        }
       }
-    });
+    );
   }
-  const headers = normalizedResponseHeaders(response.headers);
+  const headers = normalizedResponseHeaders(safeResponse.headers);
   const type = mediaType(headers);
   const allowed = contract.contentType;
   if (
@@ -417,7 +470,7 @@ export function parseOperationResponse<Operation extends OperationDefinition>(
     throw new ResponseContractError('Response content type did not match the contract.', {
       operationId: operation.id,
       details: {
-        status: response.status,
+        status: safeResponse.status,
         contractStatus,
         section: 'body',
         issues: [issue([], 'Unexpected response content type.', 'content_type')]
@@ -426,16 +479,19 @@ export function parseOperationResponse<Operation extends OperationDefinition>(
   }
 
   let decoded: unknown;
-  if (response.body.byteLength === 0) {
+  if (safeResponse.body.byteLength === 0) {
     decoded = undefined;
   } else {
     let text: string;
     try {
-      text = new TextDecoder('utf-8', { fatal: true }).decode(response.body);
+      text = new TextDecoder('utf-8', { fatal: true }).decode(safeResponse.body);
     } catch (error) {
       throw new ResponseParseError('Response body is not valid UTF-8.', {
         operationId: operation.id,
-        details: { status: response.status, ...(type === undefined ? {} : { contentType: type }) },
+        details: {
+          status: safeResponse.status,
+          ...(type === undefined ? {} : { contentType: type })
+        },
         cause: error
       });
     }
@@ -446,7 +502,7 @@ export function parseOperationResponse<Operation extends OperationDefinition>(
         throw new ResponseParseError('Response body contains malformed JSON.', {
           operationId: operation.id,
           details: {
-            status: response.status,
+            status: safeResponse.status,
             ...(type === undefined ? {} : { contentType: type }),
             ...(redactor.previewCharacters === 0 ? {} : { preview: redactor.preview(text) })
           },
@@ -459,7 +515,7 @@ export function parseOperationResponse<Operation extends OperationDefinition>(
       throw new ResponseParseError('Response content type is missing or unsupported.', {
         operationId: operation.id,
         details: {
-          status: response.status,
+          status: safeResponse.status,
           ...(type === undefined ? {} : { contentType: type }),
           ...(redactor.previewCharacters === 0 ? {} : { preview: redactor.preview(text) })
         }
@@ -472,10 +528,10 @@ export function parseOperationResponse<Operation extends OperationDefinition>(
     throw new ResponseContractError('Response headers failed contract validation.', {
       operationId: operation.id,
       details: {
-        status: response.status,
+        status: safeResponse.status,
         contractStatus,
         section: 'headers',
-        issues: normalizeZodIssues(parsedHeaders.error)
+        issues: normalizeZodIssues(parsedHeaders.error, redactor)
       }
     });
   }
@@ -484,19 +540,19 @@ export function parseOperationResponse<Operation extends OperationDefinition>(
     throw new ResponseContractError('Response body failed contract validation.', {
       operationId: operation.id,
       details: {
-        status: response.status,
+        status: safeResponse.status,
         contractStatus,
         section: 'body',
-        issues: normalizeZodIssues(parsedBody.error)
+        issues: normalizeZodIssues(parsedBody.error, redactor)
       }
     });
   }
   return {
     operationId: operation.id,
-    status: response.status,
+    status: safeResponse.status,
     contractStatus,
     body: parsedBody.data,
     headers: parsedHeaders?.success === true ? parsedHeaders.data : headers,
-    durationMs: response.durationMs
+    durationMs: safeResponse.durationMs
   } as OperationResult<Operation>;
 }

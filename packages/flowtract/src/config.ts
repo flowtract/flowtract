@@ -81,22 +81,47 @@ function validateAuth(
   }
 }
 
+function snapshotRedaction(config: RedactionConfig | undefined): RedactionConfig | undefined {
+  if (config === undefined) return undefined;
+  const headers =
+    config.headers === undefined
+      ? undefined
+      : Object.freeze(
+          config.headers.map((header, index) => {
+            if (typeof header !== 'string' || header.trim().length === 0) {
+              fail(
+                `redaction.headers.${index}`,
+                'Redaction header names must be non-empty strings.'
+              );
+            }
+            return header;
+          })
+        );
+  const jsonPaths =
+    config.jsonPaths === undefined
+      ? undefined
+      : Object.freeze(
+          config.jsonPaths.map((path, index) => {
+            if (typeof path !== 'string') {
+              fail(`redaction.jsonPaths.${index}`, 'Redaction JSON paths must be strings.');
+            }
+            return path;
+          })
+        );
+  return Object.freeze({
+    ...(headers === undefined ? {} : { headers }),
+    ...(jsonPaths === undefined ? {} : { jsonPaths }),
+    ...(config.previewCharacters === undefined
+      ? {}
+      : { previewCharacters: config.previewCharacters })
+  });
+}
+
 export function defineConfig<const Config extends FlowtractConfig>(
   config: Config
 ): Readonly<Config> {
   normalizeConfig(config);
-  const redaction =
-    config.redaction === undefined
-      ? undefined
-      : Object.freeze({
-          ...config.redaction,
-          ...(config.redaction.headers === undefined
-            ? {}
-            : { headers: Object.freeze([...config.redaction.headers]) }),
-          ...(config.redaction.jsonPaths === undefined
-            ? {}
-            : { jsonPaths: Object.freeze([...config.redaction.jsonPaths]) })
-        });
+  const redaction = snapshotRedaction(config.redaction);
   return Object.freeze({
     ...config,
     operations: Object.freeze([...config.operations]),
@@ -120,7 +145,8 @@ export function normalizeConfig(config: FlowtractConfig): NormalizedConfig {
   const allowInsecureTls = config.allowInsecureTls ?? false;
   if (typeof allowInsecureTls !== 'boolean')
     fail('allowInsecureTls', 'allowInsecureTls must be boolean.');
-  new Redactor(config.redaction, new SecretTracker());
+  const redaction = snapshotRedaction(config.redaction);
+  new Redactor(redaction, new SecretTracker());
   return Object.freeze({
     baseURL: normalizeBaseURL(config.baseURL),
     operations,
@@ -130,7 +156,7 @@ export function normalizeConfig(config: FlowtractConfig): NormalizedConfig {
     defaultAuth,
     timeoutMs,
     allowInsecureTls,
-    redaction: config.redaction
+    redaction
   });
 }
 

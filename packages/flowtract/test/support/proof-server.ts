@@ -124,6 +124,29 @@ export async function startProofServer(): Promise<ProofServer> {
         send(response, 200, { ok: true });
         return;
       }
+      if (url.pathname === '/responses/redirect') {
+        const remaining = Number(url.searchParams.get('remaining') ?? '0');
+        if (Number.isInteger(remaining) && remaining > 0) {
+          response.writeHead(302, {
+            location: `/responses/redirect?remaining=${remaining - 1}`
+          });
+          response.end();
+          return;
+        }
+        send(response, 200, { ok: true });
+        return;
+      }
+      if (url.pathname === '/responses/repeated-headers') {
+        response.setHeader('content-type', 'application/json');
+        response.setHeader('x-proof-repeat', ['first', 'second']);
+        response.end('{"ok":true}');
+        return;
+      }
+      if (url.pathname === '/responses/status') {
+        const status = Number(url.searchParams.get('code') ?? '200');
+        send(response, status, { message: `status ${status}` });
+        return;
+      }
       if (url.pathname === '/responses/internal-error') {
         throw new Error(internalFailureMarker);
       }

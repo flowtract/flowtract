@@ -15,10 +15,14 @@ function classify(
   request: TransportRequest
 ): 'timeout' | 'abort' | 'network' | 'tls' | 'unknown' {
   if (request.signal?.aborted === true) return 'abort';
-  if (error instanceof errors.TimeoutError || /timeout|timed out/iu.test(errorText(error))) {
+  const text = errorText(error);
+  const redirectOverflow = /max(?:imum)? redirect|redirect count exceeded/iu.test(text);
+  if (
+    !redirectOverflow &&
+    (error instanceof errors.TimeoutError || /timeout|timed out/iu.test(text))
+  ) {
     return 'timeout';
   }
-  const text = errorText(error);
   if (/certificate|self.signed|ERR_TLS|CERT_|DEPTH_ZERO/iu.test(text)) return 'tls';
   if (/ECONN|ENOTFOUND|EAI_AGAIN|socket|network|redirect/iu.test(text)) return 'network';
   return 'unknown';

@@ -34,6 +34,17 @@ describe('scenario state and interpolation', () => {
     expect(() => state.set('token', 'public')).toThrow(InterpolationError);
     expect(() => state.setSecret('empty', '')).toThrow(InterpolationError);
   });
+
+  it('enforces reference-depth and traversal-node bounds', () => {
+    const state = new ScenarioState(new SecretTracker());
+    for (let index = 0; index < 65; index += 1) {
+      state.set(`depth${index}`, index === 64 ? 'end' : `{{depth${index + 1}}}`);
+    }
+    expect(() => interpolateValue('{{depth0}}', state)).toThrow(InterpolationError);
+
+    const tooMany = Array.from({ length: 10_001 }, () => []);
+    expect(() => interpolateValue(tooMany, state)).toThrow(InterpolationError);
+  });
 });
 
 describe('redaction', () => {

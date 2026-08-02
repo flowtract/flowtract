@@ -4,11 +4,12 @@ import {
   CleanupError,
   ConfigError,
   FlowtractError,
+  TransportError,
   type CleanupFailure
 } from './errors.js';
 import { applyAuth, authFailure } from './auth.js';
 import { resolveTimeout, type NormalizedConfig } from './config.js';
-import { interpolateValue } from './internal/interpolate.js';
+import { interpolateWithTaint } from './internal/interpolate.js';
 import { parseOperationResponse, prepareOperationInput, RequestBuilder } from './internal/http.js';
 import { Redactor } from './internal/redaction.js';
 import { ScenarioState, SecretTracker } from './internal/state.js';
@@ -37,6 +38,7 @@ type CleanupAction = {
   readonly label: string;
   readonly action: (client: FlowtractClient) => void | Promise<void>;
 };
+const REQUEST_SECTIONS = new Set(['headers', 'query', 'pathParams', 'body']);
 
 function configError(message: string, operationId?: string): ConfigError {
   return new ConfigError(message, {
@@ -148,7 +150,9 @@ export class Scenario implements FlowtractScenario {
     input?: OperationInput<Operation>,
     options: ExecutionOptions = {}
   ): Promise<OperationResult<Operation> | DryRunResult<Operation>> {
-    this.#assertActive(operation.id);
+    if (this.#status !== 'active') {
+      return Promise.reject(configError('Scenario is closing or closed.', operation.id));
+    }
     if (this.#current !== undefined) {
       return Promise.reject(
         configError('A scenario may execute only one operation at a time.', operation.id)
@@ -176,18 +180,50 @@ export class Scenario implements FlowtractScenario {
     const startedAt = new Date().toISOString();
     const auth = options.auth ?? operation.auth ?? this.config.defaultAuth;
     const timeoutMs = resolveTimeout(options.timeoutMs, operation.timeoutMs, this.config.timeoutMs);
+    let failurePhase: DiagnosticEvent['phase'] = 'request';
     try {
+      if (options.signal?.aborted === true) {
+        failurePhase = 'transport';
+        throw new TransportError('HTTP transport execution was aborted.', {
+          operationId: operation.id,
+          details: { kind: 'abort' },
+          ...(options.signal.reason === undefined ? {} : { cause: options.signal.reason })
+        });
+      }
+      failurePhase = 'auth';
       const authInstance = auth === false ? undefined : await this.#authInstance(auth);
-      const interpolatedInput = interpolateValue(input, this.#state);
+      failurePhase = 'interpolation';
+      const interpolatedInput = interpolateWithTaint(input, this.#state);
       const interpolatedHeaders =
         options.headers === undefined
           ? undefined
-          : (interpolateValue(options.headers, this.#state) as Readonly<Record<string, unknown>>);
+          : interpolateWithTaint(options.headers, this.#state);
+      const taintedSections = new Set<string>();
+      for (const path of interpolatedInput.taintedPaths) {
+        const section = path[0];
+        if (typeof section === 'string' && REQUEST_SECTIONS.has(section)) {
+          taintedSections.add(section);
+        }
+      }
+      if ((interpolatedHeaders?.taintedPaths.length ?? 0) > 0) {
+        taintedSections.add('headers');
+      }
       const effectiveOptions: ExecutionOptions = {
         ...options,
-        ...(interpolatedHeaders === undefined ? {} : { headers: interpolatedHeaders })
+        ...(interpolatedHeaders === undefined
+          ? {}
+          : { headers: interpolatedHeaders.value as Readonly<Record<string, unknown>> })
       };
-      const parsed = prepareOperationInput(operation, input, effectiveOptions, interpolatedInput);
+      failurePhase = 'request';
+      const parsed = prepareOperationInput(
+        operation,
+        input,
+        effectiveOptions,
+        interpolatedInput.value,
+        this.#redactor,
+        taintedSections,
+        this.#secrets
+      );
       const request = new RequestBuilder(
         operation,
         parsed as Readonly<Record<string, unknown>>,
@@ -197,6 +233,7 @@ export class Scenario implements FlowtractScenario {
         this.#secrets
       );
       if (auth !== false && authInstance !== undefined) {
+        failurePhase = 'auth';
         await applyAuth(auth, authInstance, {
           operationId: operation.id,
           state: this.#state,
@@ -226,7 +263,9 @@ export class Scenario implements FlowtractScenario {
           ])
         }) as DryRunResult<Operation>;
       }
+      failurePhase = 'transport';
       const response = await this.transport.execute(request.transportRequest());
+      failurePhase = 'response';
       const result = parseOperationResponse(operation, response, this.#redactor);
       this.#history.push(
         Object.freeze({
@@ -248,7 +287,7 @@ export class Scenario implements FlowtractScenario {
     } catch (error) {
       const code = error instanceof FlowtractError ? error.code : undefined;
       this.#emit(
-        phase === 'auth' ? 'auth' : phase === 'cleanup' ? 'cleanup' : 'response',
+        phase === 'auth' ? 'auth' : phase === 'cleanup' ? 'cleanup' : failurePhase,
         'error',
         operation.id,
         {
@@ -277,20 +316,32 @@ export class Scenario implements FlowtractScenario {
       } catch (error) {
         throw authFailure(profile, 'create', error);
       }
+      if (
+        instance === null ||
+        typeof instance !== 'object' ||
+        typeof instance.apply !== 'function' ||
+        (instance.setup !== undefined && typeof instance.setup !== 'function') ||
+        (instance.dispose !== undefined && typeof instance.dispose !== 'function')
+      ) {
+        throw authFailure(
+          profile,
+          'create',
+          new TypeError('Authentication provider create() returned an invalid instance.')
+        );
+      }
       this.#authInstances.push({ profile, instance });
       if (instance.setup !== undefined) {
         try {
           const execute = (async (
             operation: OperationDefinition,
-            input?: OperationInput<OperationDefinition>,
-            options?: ExecutionOptions
+            input?: OperationInput<OperationDefinition>
           ) =>
             this.#executeInternal(
               operation,
               input,
-              { ...options, auth: false, dryRun: false },
+              { auth: false, dryRun: false },
               'auth'
-            )) as FlowtractClient['execute'];
+            )) as Parameters<NonNullable<AuthProviderInstance['setup']>>[0]['execute'];
           await instance.setup({ state: this.#state, execute });
         } catch (error) {
           throw authFailure(profile, 'setup', error);
@@ -342,6 +393,7 @@ export class Scenario implements FlowtractScenario {
     for (const cleanup of [...this.#cleanups].reverse()) {
       let active = true;
       let current: Promise<unknown> | undefined;
+      const executions: Promise<unknown>[] = [];
       const client: FlowtractClient = {
         execute: ((
           operation: OperationDefinition,
@@ -357,26 +409,42 @@ export class Scenario implements FlowtractScenario {
           }
           const execution = this.#executeInternal(operation, input, options ?? {}, 'cleanup');
           current = execution;
-          void execution
-            .finally(() => {
+          executions.push(execution);
+          void execution.then(
+            () => {
               if (current === execution) current = undefined;
-            })
-            .catch(() => undefined);
+            },
+            () => {
+              if (current === execution) current = undefined;
+            }
+          );
           return execution;
         }) as FlowtractClient['execute']
       };
+      let actionFailed = false;
+      let actionError: unknown;
       try {
         await cleanup.action(client);
-        await current;
       } catch (error) {
+        actionFailed = true;
+        actionError = error;
+      } finally {
+        active = false;
+      }
+      const executionResults = await Promise.allSettled(executions);
+      const cleanupErrors = [
+        ...(actionFailed ? [actionError] : []),
+        ...executionResults.flatMap(result =>
+          result.status === 'rejected' && result.reason !== actionError ? [result.reason] : []
+        )
+      ];
+      for (const error of cleanupErrors) {
         failures.push({
           label: cleanup.label,
           message: this.#redactor.text(
             error instanceof Error ? error.message : 'Unknown cleanup failure'
           )
         });
-      } finally {
-        active = false;
       }
     }
     for (const { profile, instance } of [...this.#authInstances].reverse()) {

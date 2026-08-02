@@ -226,7 +226,12 @@ Approval is recorded below before implementation starts:
 | Decision          | Approved         |
 | Approved by       | Repository owner |
 | Approval date     | 2026-07-29       |
-| Approved revision | `ca990a9`        |
+| Approved revision | `269b787`        |
+
+Revision `269b787` is the signed DCO rewrite of the originally reviewed
+`ca990a9`; both commits have the identical tree
+`5d8d280c29ff5f648d8b4e5a26cd9cd6022ae5de`, so the approved specification
+content did not change.
 
 ## Next action after approval
 

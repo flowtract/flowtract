@@ -86,6 +86,7 @@ import { z } from 'zod';
 import {
   defineOperation,
   type AuthErrorDetails,
+  type AuthSetupContext,
   type CleanupErrorDetails,
   type CleanupFailure,
   type ConfigErrorDetails,
@@ -130,6 +131,7 @@ const operation = defineOperation({
 });
 
 declare const client: FlowtractClient;
+declare const authSetup: AuthSetupContext;
 declare const runtime: FlowtractRuntime;
 declare const scenario: FlowtractScenario;
 declare const transport: HttpTransport;
@@ -142,6 +144,7 @@ const checkResult = (result: Result): string => {
 
 type PublicTypes = [
   AuthErrorDetails,
+  AuthSetupContext,
   CleanupErrorDetails,
   CleanupFailure,
   ConfigErrorDetails,
@@ -176,6 +179,9 @@ if (false) {
     { body: { quantity: '4' } },
     { dryRun: true }
   ).then(result => result.dryRun);
+  authSetup.execute(operation, { body: { quantity: '4' } });
+  // @ts-expect-error auth setup cannot dry-run or override authentication
+  authSetup.execute(operation, { body: { quantity: '4' } }, { dryRun: true });
 }
 `;
 

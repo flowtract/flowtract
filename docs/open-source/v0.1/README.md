@@ -73,7 +73,8 @@ Gate 0 is complete only when:
 Gate 1 was accepted at source revision `fc304b1`. Gate 1.5 replaced the
 repository-transfer assumption with a reviewed clean extraction and completed
 public activation at `090ec2e`. The Gate 2 specification was approved for
-implementation on 2026-07-29 against revision `ca990a9`, including the
-close-scoped cleanup-client amendment. The implementation is locally
+implementation on 2026-07-29 against signed revision `269b787` (the
+tree-identical DCO rewrite of `ca990a9`), including the close-scoped
+cleanup-client amendment. The implementation is locally
 proof-gated; pull-request review and the Windows/Ubuntu Node 22/24 matrix remain
 acceptance prerequisites. npm publication remains separately gated.

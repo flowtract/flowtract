@@ -1,5 +1,15 @@
 import { InterpolationError } from '../errors.js';
-import type { AuthStateAccess } from '../runtime-types.js';
+import type { AuthStateAccess, MutableAuthRequest } from '../runtime-types.js';
+
+export const authSecretRegistrar = Symbol('flowtract.authSecretRegistrar');
+
+type SecretAwareAuthRequest = MutableAuthRequest & {
+  [authSecretRegistrar]?(value: unknown): void;
+};
+
+export function registerAuthSecret(request: MutableAuthRequest, value: unknown): void {
+  (request as SecretAwareAuthRequest)[authSecretRegistrar]?.(value);
+}
 
 function normalizedName(name: string): string {
   const normalized = name.trim();

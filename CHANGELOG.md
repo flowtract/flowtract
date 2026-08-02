@@ -38,6 +38,19 @@ migration guidance.
 - Gate 2 package consumers, compiler-matrix declarations, coverage thresholds,
   repository checks, and the `gate2:qa` compatibility gate.
 
+### Fixed
+
+- Prevent secret-tainted request validation messages, transformed secret
+  values, and bearer/basic source credentials from reaching error previews.
+- Wait for cleanup-client I/O before auth and transport disposal even when a
+  cleanup callback fails without awaiting its operation.
+- Reject pre-aborted operations before custom transport execution and align the
+  public auth-setup client with its forced unauthenticated runtime behavior.
+- Snapshot redaction configuration, validate custom transport headers and auth
+  instances, and classify redirect overflow separately from request timeout.
+- Extend Gate 2 proof for lifecycle races, response disposal, redirects,
+  connection failures, repeated headers, declared error statuses, and bounds.
+
 ### Current limitations
 
 - Gate 2 is implemented and locally proof-gated; pull-request review and the

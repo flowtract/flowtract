@@ -1,11 +1,7 @@
 import { Buffer } from 'node:buffer';
 import { AuthError } from './errors.js';
-import type {
-  FlowtractExecutionOptions,
-  OperationDefinition,
-  OperationInput,
-  OperationResult
-} from './operation-types.js';
+import { registerAuthSecret } from './internal/state.js';
+import type { OperationDefinition, OperationInput, OperationResult } from './operation-types.js';
 import type {
   AuthApplyContext,
   AuthProvider,
@@ -36,10 +32,9 @@ export function bearerToken(options: { readonly token: StringSource }): AuthProv
   return {
     create: () => ({
       apply: async ({ state, request }) => {
-        request.setHeader(
-          'authorization',
-          `Bearer ${await resolve(options.token, state, 'token')}`
-        );
+        const token = await resolve(options.token, state, 'token');
+        registerAuthSecret(request, token);
+        request.setHeader('authorization', `Bearer ${token}`);
       }
     })
   };
@@ -55,6 +50,7 @@ export function apiKey(options: {
     create: () => ({
       apply: async ({ state, request }) => {
         const value = await resolve(options.value, state, 'API key');
+        registerAuthSecret(request, value);
         if (options.in === 'header') request.setHeader(options.name, value);
         else request.setQuery(options.name, value);
       }
@@ -71,10 +67,11 @@ export function basicAuth(options: {
       apply: async ({ state, request }) => {
         const username = await resolve(options.username, state, 'username');
         const password = await resolve(options.password, state, 'password');
-        request.setHeader(
-          'authorization',
-          `Basic ${Buffer.from(`${username}:${password}`, 'utf8').toString('base64')}`
-        );
+        const encoded = Buffer.from(`${username}:${password}`, 'utf8').toString('base64');
+        registerAuthSecret(request, username);
+        registerAuthSecret(request, password);
+        registerAuthSecret(request, encoded);
+        request.setHeader('authorization', `Basic ${encoded}`);
       }
     })
   };
@@ -90,14 +87,15 @@ export function sessionAuth<const Login extends OperationDefinition>(
           typeof options.input === 'function' ? await options.input(context.state) : options.input;
         const result = (await context.execute(
           options.login,
-          input as OperationInput<Login>,
-          { auth: false } as FlowtractExecutionOptions & { dryRun?: false }
+          input as OperationInput<Login>
         )) as OperationResult<Login>;
         await options.afterLogin?.(result, context.state);
       },
       apply: ({ state, request }) => {
         if (options.csrf !== undefined) {
-          request.setHeader(options.csrf.header, String(state.require(options.csrf.state)));
+          const value = String(state.require(options.csrf.state));
+          registerAuthSecret(request, value);
+          request.setHeader(options.csrf.header, value);
         }
       }
     })
