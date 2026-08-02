@@ -87,6 +87,43 @@ describe('defineOperation', () => {
     ).toThrowError('must be an HTTP status');
   });
 
+  it('contains hostile registration values without invoking accessors or coercion hooks', () => {
+    let getterCalls = 0;
+    const hostileDefinition = {
+      get id() {
+        getterCalls += 1;
+        throw new Error('registration getter executed');
+      },
+      method: 'GET',
+      path: '/health',
+      responses: { 200: { body: z.unknown() } }
+    };
+
+    expect(() => defineOperation(hostileDefinition as never)).toThrowError(ConfigError);
+    expect(getterCalls).toBe(0);
+
+    const revoked = Proxy.revocable({ 200: { body: z.unknown() } }, {});
+    revoked.revoke();
+    expect(() =>
+      defineOperation(minimalOperation({ responses: revoked.proxy }) as never)
+    ).toThrowError(ConfigError);
+
+    let coercions = 0;
+    expect(() =>
+      defineOperation(
+        minimalOperation({
+          method: {
+            toString() {
+              coercions += 1;
+              return 'GET';
+            }
+          }
+        }) as never
+      )
+    ).toThrowError(ConfigError);
+    expect(coercions).toBe(0);
+  });
+
   it('rejects missing and unused path parameter keys', () => {
     expect(() =>
       defineOperation({

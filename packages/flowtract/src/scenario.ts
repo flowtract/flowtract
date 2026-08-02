@@ -13,6 +13,15 @@ import { interpolateWithTaint } from './internal/interpolate.js';
 import { parseOperationResponse, prepareOperationInput, RequestBuilder } from './internal/http.js';
 import { Redactor } from './internal/redaction.js';
 import { ScenarioState, SecretTracker } from './internal/state.js';
+import {
+  defineSafeData,
+  safeArrayValues,
+  safeDataProperty,
+  safeErrorMessage,
+  safeIsError,
+  safeOwnEntries,
+  safeOwnData
+} from './internal/safe-inspection.js';
 import type {
   DryRunResult,
   DryRunExecuteArguments,
@@ -40,6 +49,10 @@ type CleanupAction = {
 };
 const REQUEST_SECTIONS = new Set(['headers', 'query', 'pathParams', 'body']);
 
+function signalIsAborted(signal: AbortSignal | undefined): boolean {
+  return signal?.aborted === true;
+}
+
 function configError(message: string, operationId?: string): ConfigError {
   return new ConfigError(message, {
     ...(operationId === undefined ? {} : { operationId }),
@@ -48,19 +61,87 @@ function configError(message: string, operationId?: string): ConfigError {
 }
 
 function normalizedMetadata(metadata: ScenarioMetadata | undefined): Readonly<ScenarioMetadata> {
-  const id = metadata?.id?.trim() || randomUUID();
+  if (metadata !== undefined && !safeOwnEntries(metadata).ok) {
+    throw configError('Scenario metadata is invalid.');
+  }
+  const rawId = safeOwnData(metadata, 'id');
+  const rawName = safeOwnData(metadata, 'name');
+  const rawTags = safeOwnData(metadata, 'tags');
+  if (rawId !== undefined && typeof rawId !== 'string')
+    throw configError('Scenario id is invalid.');
+  if (rawName !== undefined && typeof rawName !== 'string') {
+    throw configError('Scenario name is invalid.');
+  }
+  const tags = rawTags === undefined ? undefined : safeArrayValues(rawTags);
+  if (rawTags !== undefined && (tags === undefined || tags.some(tag => typeof tag !== 'string'))) {
+    throw configError('Scenario tags are invalid.');
+  }
+  const id = (rawId as string | undefined)?.trim() || randomUUID();
   if (id.includes('{{') || id.includes('}}')) throw configError('Scenario id is invalid.');
-  return Object.freeze({
-    ...metadata,
-    id,
-    ...(metadata?.tags === undefined ? {} : { tags: Object.freeze([...metadata.tags]) })
-  });
+  const output: Record<string, unknown> = {};
+  defineSafeData(output, 'id', id);
+  if (rawName !== undefined) defineSafeData(output, 'name', rawName);
+  if (tags !== undefined) defineSafeData(output, 'tags', Object.freeze([...tags]));
+  return Object.freeze(output) as Readonly<ScenarioMetadata>;
 }
 
 function normalizePrimary(error: unknown): Error {
-  return error instanceof Error
+  return safeIsError(error)
     ? error
     : new Error('Scenario callback threw a non-Error value.', { cause: error });
+}
+
+function flowtractErrorCode(error: unknown): FlowtractError['code'] | undefined {
+  try {
+    return error instanceof FlowtractError ? error.code : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function asCleanupError(error: unknown): CleanupError {
+  try {
+    if (error instanceof CleanupError) return error;
+  } catch {
+    // Hostile proxy failures are normalized below.
+  }
+  return new CleanupError('Scenario cleanup failed.', {
+    details: {
+      failures: [
+        {
+          label: 'close',
+          message: safeErrorMessage(error, 'Unknown cleanup failure')
+        }
+      ]
+    },
+    cause: error
+  });
+}
+
+function attachCleanupError(primary: Error, cleanup: CleanupError): Error {
+  try {
+    if (
+      Object.isExtensible(primary) &&
+      Reflect.defineProperty(primary, 'cleanupError', {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: cleanup
+      })
+    ) {
+      return primary;
+    }
+  } catch {
+    // A hostile primary is wrapped below so cleanup evidence cannot be lost.
+  }
+  const wrapped = new Error(safeErrorMessage(primary, 'Scenario failed.'), { cause: primary });
+  Object.defineProperty(wrapped, 'cleanupError', {
+    configurable: false,
+    enumerable: false,
+    writable: false,
+    value: cleanup
+  });
+  return wrapped;
 }
 
 export class Scenario implements FlowtractScenario {
@@ -264,7 +345,21 @@ export class Scenario implements FlowtractScenario {
         }) as DryRunResult<Operation>;
       }
       failurePhase = 'transport';
-      const response = await this.transport.execute(request.transportRequest());
+      let response;
+      try {
+        response = await this.transport.execute(request.transportRequest());
+      } catch (error) {
+        try {
+          if (error instanceof TransportError) throw error;
+        } catch (classificationError) {
+          if (classificationError === error) throw error;
+        }
+        throw new TransportError('HTTP transport execution failed.', {
+          operationId: operation.id,
+          details: { kind: signalIsAborted(options.signal) ? 'abort' : 'unknown' },
+          cause: error
+        });
+      }
       failurePhase = 'response';
       const result = parseOperationResponse(operation, response, this.#redactor);
       this.#history.push(
@@ -285,14 +380,14 @@ export class Scenario implements FlowtractScenario {
       });
       return result;
     } catch (error) {
-      const code = error instanceof FlowtractError ? error.code : undefined;
+      const code = flowtractErrorCode(error);
       this.#emit(
         phase === 'auth' ? 'auth' : phase === 'cleanup' ? 'cleanup' : failurePhase,
         'error',
         operation.id,
         {
           ...(code === undefined ? {} : { code }),
-          message: this.#redactor.text(error instanceof Error ? error.message : 'Unknown failure')
+          message: this.#redactor.text(safeErrorMessage(error))
         },
         code
       );
@@ -312,22 +407,28 @@ export class Scenario implements FlowtractScenario {
     const promise = (async () => {
       let instance: AuthProviderInstance;
       try {
-        instance = await provider.create({ profile, scenarioId: this.id });
+        const create = safeDataProperty(provider, 'create');
+        if (typeof create !== 'function') throw new TypeError('Auth provider create() is invalid.');
+        const created = await Reflect.apply(create, provider, [{ profile, scenarioId: this.id }]);
+        const apply = safeDataProperty(created, 'apply');
+        const setup = safeDataProperty(created, 'setup');
+        const dispose = safeDataProperty(created, 'dispose');
+        if (
+          typeof apply !== 'function' ||
+          (setup !== undefined && typeof setup !== 'function') ||
+          (dispose !== undefined && typeof dispose !== 'function')
+        ) {
+          throw new TypeError('Authentication provider create() returned an invalid instance.');
+        }
+        instance = {
+          apply: context => Reflect.apply(apply, created, [context]),
+          ...(setup === undefined
+            ? {}
+            : { setup: context => Reflect.apply(setup, created, [context]) }),
+          ...(dispose === undefined ? {} : { dispose: () => Reflect.apply(dispose, created, []) })
+        };
       } catch (error) {
         throw authFailure(profile, 'create', error);
-      }
-      if (
-        instance === null ||
-        typeof instance !== 'object' ||
-        typeof instance.apply !== 'function' ||
-        (instance.setup !== undefined && typeof instance.setup !== 'function') ||
-        (instance.dispose !== undefined && typeof instance.dispose !== 'function')
-      ) {
-        throw authFailure(
-          profile,
-          'create',
-          new TypeError('Authentication provider create() returned an invalid instance.')
-        );
       }
       this.#authInstances.push({ profile, instance });
       if (instance.setup !== undefined) {
@@ -441,9 +542,7 @@ export class Scenario implements FlowtractScenario {
       for (const error of cleanupErrors) {
         failures.push({
           label: cleanup.label,
-          message: this.#redactor.text(
-            error instanceof Error ? error.message : 'Unknown cleanup failure'
-          )
+          message: this.#redactor.text(safeErrorMessage(error, 'Unknown cleanup failure'))
         });
       }
     }
@@ -461,9 +560,7 @@ export class Scenario implements FlowtractScenario {
     } catch (error) {
       failures.push({
         label: 'transport',
-        message: this.#redactor.text(
-          error instanceof Error ? error.message : 'Transport disposal failed'
-        )
+        message: this.#redactor.text(safeErrorMessage(error, 'Transport disposal failed'))
       });
     }
     this.#emit('dispose', failures.length === 0 ? 'info' : 'error', undefined, {
@@ -495,42 +592,12 @@ export async function runScenario<Result>(
   try {
     await scenario.close();
   } catch (cleanupError) {
-    cleanup =
-      cleanupError instanceof CleanupError
-        ? cleanupError
-        : new CleanupError('Scenario cleanup failed.', {
-            details: {
-              failures: [
-                {
-                  label: 'close',
-                  message:
-                    cleanupError instanceof Error ? cleanupError.message : 'Unknown cleanup failure'
-                }
-              ]
-            },
-            cause: cleanupError
-          });
+    cleanup = asCleanupError(cleanupError);
   }
 
   if (primary !== undefined) {
     if (cleanup === undefined) throw primary;
-    if (Object.isExtensible(primary)) {
-      Object.defineProperty(primary, 'cleanupError', {
-        configurable: false,
-        enumerable: false,
-        writable: false,
-        value: cleanup
-      });
-      throw primary;
-    }
-    const wrapped = new Error(primary.message, { cause: primary });
-    Object.defineProperty(wrapped, 'cleanupError', {
-      configurable: false,
-      enumerable: false,
-      writable: false,
-      value: cleanup
-    });
-    throw wrapped;
+    throw attachCleanupError(primary, cleanup);
   }
 
   if (cleanup !== undefined) throw cleanup;

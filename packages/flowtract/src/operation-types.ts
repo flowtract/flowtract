@@ -1,5 +1,6 @@
 import type { z } from 'zod';
 
+/** HTTP methods supported by Flowtract's REST operation contract. */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
 
 export type FlowtractSchema = z.ZodType;
@@ -33,6 +34,7 @@ export interface OperationDefinitionInput {
 
 declare const operationDefinitionMarker: unique symbol;
 
+/** An immutable operation definition created by {@link defineOperation}. */
 export type OperationDefinition<Input extends OperationDefinitionInput = OperationDefinitionInput> =
   Readonly<Input> & {
     readonly [operationDefinitionMarker]: true;
@@ -68,6 +70,7 @@ type OutputSection<Request, Key extends 'headers' | 'query' | 'pathParams' | 'bo
 
 type Simplify<Value> = { readonly [Key in keyof Value]: Value[Key] };
 
+/** The caller-facing, pre-Zod input inferred from an operation definition. */
 export type OperationInput<Operation extends OperationDefinition> = Simplify<
   InputSection<RequestOf<Operation>, 'headers'> &
     InputSection<RequestOf<Operation>, 'query'> &
@@ -122,6 +125,7 @@ type ResponseResultMember<Operation, Responses, Key extends keyof Responses> = K
     ? DefaultResult<Operation, Responses[Key]>
     : never;
 
+/** The status-discriminated, post-Zod result of a sent operation. */
 export type OperationResult<Operation extends OperationDefinition> = {
   [Key in keyof ResponsesOf<Operation>]: ResponseResultMember<
     Operation,
@@ -130,6 +134,7 @@ export type OperationResult<Operation extends OperationDefinition> = {
   >;
 }[keyof ResponsesOf<Operation>];
 
+/** Per-execution overrides; invocation values take precedence over operation and runtime defaults. */
 export interface FlowtractExecutionOptions {
   readonly auth?: string | false;
   readonly timeoutMs?: number;
@@ -140,6 +145,7 @@ export interface FlowtractExecutionOptions {
   };
 }
 
+/** A redacted description returned when `dryRun: true` prevents target-operation transport I/O. */
 export interface DryRunResult<Operation extends OperationDefinition> {
   readonly operationId: OperationId<Operation>;
   readonly dryRun: true;
@@ -171,6 +177,7 @@ export type DryRunExecuteArguments<Operation extends OperationDefinition> =
         options: FlowtractExecutionOptions & { readonly dryRun: true }
       ];
 
+/** The restricted operation-execution surface shared by scenarios and close-scoped cleanup clients. */
 export interface FlowtractClient {
   execute<const Operation extends OperationDefinition>(
     operation: Operation,

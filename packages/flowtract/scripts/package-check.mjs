@@ -32,6 +32,11 @@ try {
   if (archive === undefined) {
     throw new Error('npm pack did not report an archive.');
   }
+  if (archive.files.length !== 84) {
+    throw new Error(
+      `Package archive must contain exactly 84 reviewed files, found ${archive.files.length}.`
+    );
+  }
 
   const allowedRootFiles = new Set(['package.json', 'README.md', 'LICENSE', 'NOTICE']);
   const unexpectedFiles = archive.files
@@ -47,7 +52,11 @@ try {
     'dist/index.cjs',
     'dist/index.cjs.map',
     'dist/types/esm/index.d.ts',
-    'dist/types/cjs/index.d.cts'
+    'dist/types/cjs/index.d.cts',
+    'dist/types/esm/internal/safe-inspection.d.ts',
+    'dist/types/esm/internal/safe-inspection.d.ts.map',
+    'dist/types/cjs/internal/safe-inspection.d.cts',
+    'dist/types/cjs/internal/safe-inspection.d.cts.map'
   ]) {
     if (!archive.files.some(file => file.path === required)) {
       throw new Error(`Package archive is missing ${required}.`);
@@ -74,12 +83,7 @@ try {
     { cwd: packageRoot }
   );
 
-  for (const file of [
-    'dist/index.js.map',
-    'dist/index.cjs.map',
-    'dist/types/esm/index.d.ts.map',
-    'dist/types/cjs/index.d.cts.map'
-  ]) {
+  for (const file of archive.files.map(entry => entry.path).filter(file => file.endsWith('.map'))) {
     const sourceMap = JSON.parse(await readFile(path.join(packageRoot, file), 'utf8'));
     if (
       !Array.isArray(sourceMap.sourcesContent) ||
@@ -104,6 +108,14 @@ try {
   runNode([path.join(consumer, 'consumer.cjs')], { cwd: consumer });
   runConsumerTypeScript(consumer, 'tsconfig.esm.json');
   runConsumerTypeScript(consumer, 'tsconfig.cjs.json');
+  runNode([path.join(consumer, 'dist-esm', 'consumer.js')], { cwd: consumer });
+  runNode([path.join(consumer, 'dist-cjs', 'consumer.cjs')], { cwd: consumer });
+  try {
+    await readFile(path.join(consumer, 'node_modules', '@cucumber', 'cucumber', 'package.json'));
+    throw new Error('Packed consumer unexpectedly installed Cucumber.');
+  } catch (error) {
+    if (error instanceof Error && !('code' in error && error.code === 'ENOENT')) throw error;
+  }
 
   const durationMs = Date.now() - startedAt;
   if (durationMs >= 60_000) {

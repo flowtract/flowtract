@@ -26,6 +26,14 @@ import type {
 import type { SecretTracker } from './state.js';
 import { authSecretRegistrar } from './state.js';
 import type { Redactor } from './redaction.js';
+import {
+  defineSafeData,
+  safeArrayValues,
+  safeIsArray,
+  safeJsonValue,
+  safeOwnEntries,
+  safeOwnData
+} from './safe-inspection.js';
 
 function issue(path: readonly (string | number)[], message: string, code: string): ContractIssue {
   return { path, message, code };
@@ -50,7 +58,8 @@ function plainObject(
   value: unknown
 ): Readonly<Record<string, unknown>> {
   if (value === undefined) return {};
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+  const isArray = safeIsArray(value);
+  if (value === null || typeof value !== 'object' || isArray !== false) {
     requestFailure(
       operation,
       section,
@@ -59,7 +68,8 @@ function plainObject(
       `invalid_${section}`
     );
   }
-  if (Object.getPrototypeOf(value) !== Object.prototype) {
+  const inspected = safeOwnEntries(value);
+  if (!inspected.ok || (inspected.prototype !== Object.prototype && inspected.prototype !== null)) {
     requestFailure(
       operation,
       section,
@@ -68,7 +78,21 @@ function plainObject(
       `invalid_${section}`
     );
   }
-  return value as Readonly<Record<string, unknown>>;
+  const output: Record<string, unknown> = {};
+  for (const entry of inspected.entries) {
+    if (!entry.enumerable) continue;
+    if (entry.kind !== 'data') {
+      requestFailure(
+        operation,
+        section,
+        [entry.key],
+        `Request ${section} must contain data properties only.`,
+        `invalid_${section}`
+      );
+    }
+    defineSafeData(output, entry.key, entry.value);
+  }
+  return output;
 }
 
 function mergeHeaders(
@@ -87,9 +111,10 @@ function mergeHeaders(
     );
   }
   const current = input.headers;
+  const currentIsArray = safeIsArray(current);
   if (
     current !== undefined &&
-    (current === null || typeof current !== 'object' || Array.isArray(current))
+    (current === null || typeof current !== 'object' || currentIsArray !== false)
   ) {
     requestFailure(
       operation,
@@ -177,11 +202,19 @@ function queryValue(
 ): QueryValue | undefined {
   if (value === undefined) return undefined;
   if (value === null) return '';
-  if (Array.isArray(value)) {
-    if (!(name in value) && value.length > 0) {
-      // Sparse arrays are rejected by comparing own keys below.
-    }
-    if (Object.keys(value).length !== value.length) {
+  const isArray = safeIsArray(value);
+  if (isArray === undefined) {
+    requestFailure(
+      operation,
+      'query',
+      [name],
+      'Query values must be scalar or scalar arrays.',
+      'invalid_query'
+    );
+  }
+  if (isArray) {
+    const values = safeArrayValues(value);
+    if (values === undefined) {
       requestFailure(
         operation,
         'query',
@@ -190,9 +223,9 @@ function queryValue(
         'invalid_query'
       );
     }
-    return value.map((item, index) => {
+    return values.map((item, index) => {
       const parsed = queryValue(operation, name, item);
-      if (parsed === undefined || Array.isArray(parsed)) {
+      if (parsed === undefined || safeIsArray(parsed) === true) {
         requestFailure(
           operation,
           'query',
@@ -257,12 +290,8 @@ export class RequestBuilder implements MutableAuthRequest {
     if (parsed.body === undefined) {
       this.body = undefined;
     } else {
-      let serialized: string | undefined;
-      try {
-        serialized = JSON.stringify(parsed.body);
-      } catch {
-        serialized = undefined;
-      }
+      const safeBody = safeJsonValue(parsed.body);
+      const serialized = safeBody.ok ? JSON.stringify(safeBody.value) : undefined;
       if (serialized === undefined) {
         requestFailure(
           operation,
@@ -357,7 +386,8 @@ function normalizedResponseHeaders(
   const output: Record<string, string> = {};
   for (const [name, value] of headers) {
     const key = name.toLowerCase();
-    output[key] = output[key] === undefined ? value : `${output[key]}, ${value}`;
+    const current = safeOwnData(output, key);
+    defineSafeData(output, key, current === undefined ? value : `${String(current)}, ${value}`);
   }
   return Object.freeze(output);
 }
@@ -379,44 +409,60 @@ function normalizeZodIssues(
   }));
 }
 
+function isUint8Array(value: unknown): value is Uint8Array {
+  try {
+    return value instanceof Uint8Array && ArrayBuffer.isView(value);
+  } catch {
+    return false;
+  }
+}
+
 function validateTransport(
   operation: OperationDefinition,
   response: TransportResponse
 ): TransportResponse {
+  const status = safeOwnData(response, 'status');
+  const durationMs = safeOwnData(response, 'durationMs');
+  const body = safeOwnData(response, 'body');
+  const rawHeaders = safeOwnData(response, 'headers');
+  const responseUrl = safeOwnData(response, 'url');
+  const headerValues = safeArrayValues(rawHeaders);
   if (
     response === null ||
     typeof response !== 'object' ||
-    !Number.isInteger(response.status) ||
-    response.status < 100 ||
-    response.status > 599 ||
-    !Number.isFinite(response.durationMs) ||
-    response.durationMs < 0 ||
-    !(response.body instanceof Uint8Array) ||
-    !Array.isArray(response.headers)
+    !Number.isInteger(status) ||
+    (status as number) < 100 ||
+    (status as number) > 599 ||
+    !Number.isFinite(durationMs) ||
+    (durationMs as number) < 0 ||
+    !isUint8Array(body) ||
+    headerValues === undefined ||
+    typeof responseUrl !== 'string'
   ) {
     throw new TransportError('Transport returned an invalid response.', {
       operationId: operation.id,
       details: { kind: 'unknown' }
     });
   }
-  const headers = response.headers.map((header, index) => {
+  const headers = headerValues.map((header, index) => {
+    const tuple = safeArrayValues(header);
     if (
-      !Array.isArray(header) ||
-      header.length !== 2 ||
-      typeof header[0] !== 'string' ||
-      typeof header[1] !== 'string' ||
-      !validHeaderName(header[0]) ||
-      /[\r\n]/u.test(header[1])
+      tuple === undefined ||
+      tuple.length !== 2 ||
+      typeof tuple[0] !== 'string' ||
+      typeof tuple[1] !== 'string' ||
+      !validHeaderName(tuple[0]) ||
+      /[\r\n]/u.test(tuple[1])
     ) {
       throw new TransportError(`Transport returned an invalid header at index ${index}.`, {
         operationId: operation.id,
         details: { kind: 'unknown' }
       });
     }
-    return Object.freeze([header[0], header[1]]) as TransportHeader;
+    return Object.freeze([tuple[0], tuple[1]]) as TransportHeader;
   });
   try {
-    const url = new URL(response.url);
+    const url = new URL(responseUrl);
     if (!['http:', 'https:'].includes(url.protocol)) throw new Error('invalid protocol');
   } catch (error) {
     throw new TransportError('Transport returned an invalid final URL.', {
@@ -426,11 +472,11 @@ function validateTransport(
     });
   }
   return Object.freeze({
-    status: response.status,
+    status: status as number,
     headers: Object.freeze(headers),
-    body: new Uint8Array(response.body),
-    url: response.url,
-    durationMs: response.durationMs
+    body: new Uint8Array(body),
+    url: responseUrl,
+    durationMs: durationMs as number
   });
 }
 

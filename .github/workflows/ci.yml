@@ -6,6 +6,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Optional full Gate 3 candidate SHA for manual acceptance
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -18,12 +23,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
-        node:
-          - 22
-          - 24
+        include:
+          - os: ubuntu-latest
+            node: 22
+          - os: ubuntu-latest
+            node: 24
+          - os: windows-latest
+            node: 22
+          - os: windows-latest
+            node: 24
+          - os: macos-latest
+            node: 24
     steps:
       - name: Check out repository
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -52,7 +62,7 @@ jobs:
       - name: Check TypeScript source and type contracts
         run: npm run type-check
 
-      - name: Run Gate 2 unit, integration, and proof coverage
+      - name: Run Gate 3 unit, property, race, stress, and integration coverage
         run: npm run coverage
 
       - name: Build dual-module package
@@ -117,3 +127,47 @@ jobs:
 
       - name: Run isolated clean-clone proof
         run: npm run clean-clone:check
+
+  supply-chain:
+    name: Supply chain and peer compatibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Audit complete dependency graph
+        run: npm audit --audit-level=low
+
+      - name: Audit production dependency graph
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Build package
+        run: npm run build
+
+      - name: Verify minimum and latest reviewed peers
+        run: npm run peer-matrix
+
+      - name: Verify generated CycloneDX SBOM
+        run: npm run sbom:check
+
+      - name: Rehearse the reviewed package publication
+        run: npm run package:publish-dry-run:built
+
+      - name: Verify repository integrity
+        run: git diff --exit-code
+
+  gate3-acceptance:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.expected_sha != '' }}
+    uses: ./.github/workflows/gate3-acceptance.yml
+    with:
+      expected_sha: ${{ inputs.expected_sha }}

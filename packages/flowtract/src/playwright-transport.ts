@@ -2,12 +2,18 @@ import { performance } from 'node:perf_hooks';
 import { errors, request as playwrightRequest } from 'playwright';
 import { TransportError } from './errors.js';
 import type { HttpTransport, TransportRequest, TransportResponse } from './runtime-types.js';
+import { safeErrorText } from './internal/safe-inspection.js';
 
 function errorText(error: unknown): string {
-  if (error instanceof Error) {
-    return `${error.name} ${error.message} ${error.cause instanceof Error ? error.cause.message : ''}`;
+  return safeErrorText(error, '');
+}
+
+function isTimeoutError(error: unknown): boolean {
+  try {
+    return error instanceof errors.TimeoutError;
+  } catch {
+    return false;
   }
-  return '';
 }
 
 function classify(
@@ -17,10 +23,7 @@ function classify(
   if (request.signal?.aborted === true) return 'abort';
   const text = errorText(error);
   const redirectOverflow = /max(?:imum)? redirect|redirect count exceeded/iu.test(text);
-  if (
-    !redirectOverflow &&
-    (error instanceof errors.TimeoutError || /timeout|timed out/iu.test(text))
-  ) {
+  if (!redirectOverflow && (isTimeoutError(error) || /timeout|timed out/iu.test(text))) {
     return 'timeout';
   }
   if (/certificate|self.signed|ERR_TLS|CERT_|DEPTH_ZERO/iu.test(text)) return 'tls';
@@ -28,6 +31,7 @@ function classify(
   return 'unknown';
 }
 
+/** Creates the default isolated Playwright HTTP transport with secure TLS verification. */
 export function playwrightTransport(): HttpTransport {
   return {
     async createSession(options) {

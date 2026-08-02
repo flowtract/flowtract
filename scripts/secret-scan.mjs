@@ -33,12 +33,17 @@ const patterns = [
 ];
 
 const findings = [];
-for (const revision of revisions) {
-  for (const [label, pattern] of patterns) {
+const revisionChunks = [];
+for (let index = 0; index < revisions.length; index += 128) {
+  revisionChunks.push(revisions.slice(index, index + 128));
+}
+
+for (const [label, pattern] of patterns) {
+  for (const revisionChunk of revisionChunks) {
     try {
       const output = execFileSync(
         'git',
-        [...gitArguments, 'grep', '-n', '-I', '-E', '-e', pattern, revision, '--', '.'],
+        [...gitArguments, 'grep', '-n', '-I', '-E', '-e', pattern, ...revisionChunk, '--', '.'],
         {
           encoding: 'utf8',
           windowsHide: true,

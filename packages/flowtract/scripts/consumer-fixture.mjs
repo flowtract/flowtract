@@ -84,33 +84,51 @@ createFlowtract({
 export const typescriptEsm = `
 import { z } from 'zod';
 import {
+  createFlowtract,
   defineOperation,
+  type AuthApplyContext,
+  type AuthCreateContext,
   type AuthErrorDetails,
+  type AuthProvider,
+  type AuthProviderInstance,
+  type AuthStateAccess,
   type AuthSetupContext,
   type CleanupErrorDetails,
   type CleanupFailure,
   type ConfigErrorDetails,
   type ContractIssue,
   type DuplicateOperationErrorDetails,
+  type DryRunResult,
+  type ErrorWithCleanup,
   type FlowtractClient,
   type FlowtractConfig,
   type FlowtractErrorCode,
   type FlowtractErrorJson,
   type FlowtractErrorOptions,
+  type FlowtractExecutionOptions,
   type HttpMethod,
   type HttpTransport,
+  type HttpTransportSession,
   type FlowtractRuntime,
   type FlowtractScenario,
   type InterpolationErrorDetails,
+  type MutableAuthRequest,
   type OperationDefinition,
   type OperationInput,
   type OperationResult,
+  type OperationSummary,
+  type RedactionConfig,
   type RequestContractErrorDetails,
   type ResponseContractErrorDetails,
   type ResponseParseErrorDetails,
+  type ScenarioMetadata,
+  type SessionAuthOptions,
+  type DiagnosticEvent,
   type TransportErrorDetails,
+  type TransportHeader,
   type TransportRequest,
   type TransportResponse,
+  type TransportSessionOptions,
   type UndeclaredStatusErrorDetails
 } from 'flowtract';
 
@@ -130,11 +148,27 @@ const operation = defineOperation({
   }
 });
 
-declare const client: FlowtractClient;
-declare const authSetup: AuthSetupContext;
-declare const runtime: FlowtractRuntime;
-declare const scenario: FlowtractScenario;
-declare const transport: HttpTransport;
+const transport: HttpTransport = {
+  async createSession() {
+    return {
+      async execute(request) {
+        return {
+          status: 201,
+          headers: [['content-type', 'application/json']],
+          body: new TextEncoder().encode('{"id":"typed-esm"}'),
+          url: request.url,
+          durationMs: 1
+        };
+      },
+      async dispose() {}
+    };
+  }
+};
+const runtime = createFlowtract({
+  baseURL: 'http://typed-esm.local',
+  operations: [operation],
+  transport
+});
 type Result = OperationResult<typeof operation>;
 const checkResult = (result: Result): string => {
   if (result.contractStatus === 201) return result.body.id;
@@ -143,36 +177,63 @@ const checkResult = (result: Result): string => {
 };
 
 type PublicTypes = [
+  AuthApplyContext,
+  AuthCreateContext,
   AuthErrorDetails,
+  AuthProvider,
+  AuthProviderInstance,
+  AuthStateAccess,
   AuthSetupContext,
   CleanupErrorDetails,
   CleanupFailure,
   ConfigErrorDetails,
   ContractIssue,
   DuplicateOperationErrorDetails,
+  DryRunResult<typeof operation>,
+  ErrorWithCleanup,
+  FlowtractClient,
   FlowtractErrorCode,
   FlowtractErrorJson<'FLOWTRACT_CONFIG', ConfigErrorDetails>,
   FlowtractErrorOptions<ConfigErrorDetails>,
   FlowtractConfig,
+  FlowtractExecutionOptions,
+  FlowtractRuntime,
+  FlowtractScenario,
   HttpMethod,
+  HttpTransport,
+  HttpTransportSession,
   InterpolationErrorDetails,
+  MutableAuthRequest,
   OperationDefinition,
   OperationInput<typeof operation>,
+  OperationSummary,
+  RedactionConfig,
   RequestContractErrorDetails,
   ResponseContractErrorDetails,
   ResponseParseErrorDetails,
+  ScenarioMetadata,
+  SessionAuthOptions<typeof operation>,
+  DiagnosticEvent,
   TransportErrorDetails,
+  TransportHeader,
   TransportRequest,
   TransportResponse,
+  TransportSessionOptions,
   UndeclaredStatusErrorDetails
 ];
-declare const publicTypes: PublicTypes;
-void publicTypes;
-void runtime;
-void scenario;
-void transport;
+type _PublicTypesAreReachable = PublicTypes;
 
-if (false) {
+const result = await runtime.runScenario(scenario =>
+  scenario.execute(operation, { body: { quantity: '4' } })
+);
+if (checkResult(result) !== 'typed-esm') throw new Error('TypeScript ESM consumer failed');
+const dry = await runtime.runScenario(scenario =>
+  scenario.execute(operation, { body: { quantity: '4' } }, { dryRun: true })
+);
+if (dry.dryRun !== true) throw new Error('TypeScript ESM dry run failed');
+
+const checkSetup = (authSetup: AuthSetupContext, client: FlowtractClient): void => {
+  if (false) {
   client.execute(operation, { body: { quantity: '4' } }).then(checkResult);
   client.execute(
     operation,
@@ -182,12 +243,14 @@ if (false) {
   authSetup.execute(operation, { body: { quantity: '4' } });
   // @ts-expect-error auth setup cannot dry-run or override authentication
   authSetup.execute(operation, { body: { quantity: '4' } }, { dryRun: true });
-}
+  }
+};
+void checkSetup;
 `;
 
 export const typescriptCjs = `
 import { z } from 'zod';
-import { defineOperation, type OperationInput } from 'flowtract';
+import { createFlowtract, defineOperation, type OperationInput } from 'flowtract';
 
 const operation = defineOperation({
   id: 'parts.get',
@@ -206,6 +269,33 @@ const input: OperationInput<typeof operation> = {
 };
 
 void input;
+
+const transport = {
+  async createSession() {
+    return {
+      async execute(request: { url: string }) {
+        return {
+          status: 200,
+          headers: [['content-type', 'application/json']] as const,
+          body: new TextEncoder().encode('{"id":"part-1"}'),
+          url: request.url,
+          durationMs: 1
+        };
+      },
+      async dispose() {}
+    };
+  }
+};
+
+async function main(): Promise<void> {
+  const result = await createFlowtract({
+    baseURL: 'http://typed-cjs.local',
+    operations: [operation],
+    transport
+  }).runScenario(scenario => scenario.execute(operation, input));
+  if (result.body.id !== 'part-1') throw new Error('TypeScript CommonJS consumer failed');
+}
+void main();
 `;
 
 export const tsconfigEsm = {
@@ -214,7 +304,7 @@ export const tsconfigEsm = {
     module: 'NodeNext',
     moduleResolution: 'NodeNext',
     strict: true,
-    noEmit: true,
+    outDir: 'dist-esm',
     skipLibCheck: false
   },
   include: ['consumer.ts']
@@ -226,7 +316,7 @@ export const tsconfigCjs = {
     module: 'NodeNext',
     moduleResolution: 'NodeNext',
     strict: true,
-    noEmit: true,
+    outDir: 'dist-cjs',
     skipLibCheck: false
   },
   include: ['consumer.cts']

@@ -6,6 +6,13 @@ import type {
   OperationRequestContract,
   ResponseContract
 } from './operation-types.js';
+import {
+  defineSafeData,
+  safeArrayValues,
+  safeIsArray,
+  safeOwnEntries,
+  type SafeOwnEntry
+} from './internal/safe-inspection.js';
 
 const HTTP_METHODS = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']);
 
@@ -31,6 +38,45 @@ function configurationError(message: string, path: string, operationId?: string)
     ...(operationId === undefined ? {} : { operationId }),
     details: { path, issues: [message] }
   });
+}
+
+function inspectDataRecord(
+  value: unknown,
+  path: string,
+  operationId?: string
+): readonly SafeOwnEntry[] {
+  if (value === null || (typeof value !== 'object' && typeof value !== 'function')) {
+    configurationError(`${path} must be an object with data properties.`, path, operationId);
+  }
+  const inspected = safeOwnEntries(value);
+  if (!inspected.ok || inspected.entries.some(entry => entry.kind !== 'data')) {
+    configurationError(
+      `${path} must be inspectable without invoking accessors or proxy traps.`,
+      path,
+      operationId
+    );
+  }
+  return inspected.entries;
+}
+
+function entryValue(entries: readonly SafeOwnEntry[], key: string): unknown {
+  return entries.find(entry => entry.key === key)?.value;
+}
+
+function cloneEnumerableData(entries: readonly SafeOwnEntry[]): Record<string, unknown> {
+  const output: Record<string, unknown> = {};
+  for (const entry of entries) {
+    if (entry.enumerable) defineSafeData(output, entry.key, entry.value);
+  }
+  return output;
+}
+
+function safeInstanceOf(value: unknown, constructor: unknown): boolean {
+  try {
+    return value instanceof (constructor as new (...arguments_: never[]) => object);
+  } catch {
+    return false;
+  }
 }
 
 function extractPathParameterNames(path: string, operationId?: string): Set<string> {
@@ -66,7 +112,7 @@ function validatePathParameters(
   const placeholders = extractPathParameterNames(path, operationId);
   const schema = request?.pathParams;
 
-  if (placeholders.size > 0 && !(schema instanceof z.ZodObject)) {
+  if (schema !== undefined && !safeInstanceOf(schema, z.ZodObject)) {
     configurationError(
       'A Zod object pathParams schema is required for path placeholders.',
       'request.pathParams',
@@ -78,7 +124,16 @@ function validatePathParameters(
     return;
   }
 
-  const schemaKeys = new Set(schema.keyof().options);
+  let schemaKeys: Set<string>;
+  try {
+    schemaKeys = new Set(schema.keyof().options);
+  } catch {
+    configurationError(
+      'The pathParams schema could not be inspected safely.',
+      'request.pathParams',
+      operationId
+    );
+  }
   const missing = [...placeholders].filter(name => !schemaKeys.has(name));
   const unused = [...schemaKeys].filter(name => !placeholders.has(name));
 
@@ -94,28 +149,72 @@ function validatePathParameters(
   }
 }
 
-function cloneResponseContract(contract: ResponseContract): Readonly<ResponseContract> {
-  const contentType = Array.isArray(contract.contentType)
-    ? Object.freeze([...contract.contentType])
-    : contract.contentType;
+function cloneResponseContract(
+  entries: readonly SafeOwnEntry[],
+  key: string,
+  operationId?: string
+): Readonly<ResponseContract> {
+  const body = entryValue(entries, 'body');
+  const headers = entryValue(entries, 'headers');
+  const rawContentType = entryValue(entries, 'contentType');
+  if (!safeInstanceOf(body, z.ZodType)) {
+    configurationError(
+      `Response "${key}" must define a Zod body schema.`,
+      `responses.${key}.body`,
+      operationId
+    );
+  }
+  if (headers !== undefined && !safeInstanceOf(headers, z.ZodType)) {
+    configurationError(
+      `Response "${key}" headers must define a Zod schema.`,
+      `responses.${key}.headers`,
+      operationId
+    );
+  }
+  const isContentTypeArray = safeIsArray(rawContentType);
+  if (isContentTypeArray === undefined) {
+    configurationError(
+      `Response "${key}" contentType must be a string or string array.`,
+      `responses.${key}.contentType`,
+      operationId
+    );
+  }
+  const contentTypeValues = isContentTypeArray ? safeArrayValues(rawContentType) : undefined;
+  if (
+    rawContentType !== undefined &&
+    typeof rawContentType !== 'string' &&
+    (contentTypeValues === undefined || contentTypeValues.some(value => typeof value !== 'string'))
+  ) {
+    configurationError(
+      `Response "${key}" contentType must be a string or string array.`,
+      `responses.${key}.contentType`,
+      operationId
+    );
+  }
+  const contentType =
+    contentTypeValues === undefined ? rawContentType : Object.freeze([...contentTypeValues]);
   return Object.freeze({
-    body: contract.body,
-    ...(contract.headers === undefined ? {} : { headers: contract.headers }),
+    body,
+    ...(headers === undefined ? {} : { headers }),
     ...(contentType === undefined ? {} : { contentType })
-  });
+  }) as Readonly<ResponseContract>;
 }
 
 function validateResponses(
   responses: OperationDefinitionInput['responses'],
   operationId?: string
 ): Readonly<OperationDefinitionInput['responses']> {
-  const entries = Object.entries(responses);
+  const entries = inspectDataRecord(responses, 'responses', operationId).filter(
+    entry => entry.enumerable
+  );
   if (entries.length === 0) {
     configurationError('At least one response contract is required.', 'responses', operationId);
   }
 
   const cloned: Record<string, Readonly<ResponseContract>> = {};
-  for (const [key, contract] of entries) {
+  for (const entry of entries) {
+    const key = entry.key;
+    const contract = entry.value;
     if (key !== 'default' && !RESPONSE_STATUS.test(key)) {
       configurationError(
         `Response key "${key}" must be an HTTP status from 100 to 599 or "default".`,
@@ -123,28 +222,22 @@ function validateResponses(
         operationId
       );
     }
-    if (
-      contract === null ||
-      typeof contract !== 'object' ||
-      !('body' in contract) ||
-      !(contract.body instanceof z.ZodType)
-    ) {
-      configurationError(
-        `Response "${key}" must define a Zod body schema.`,
-        `responses.${key}.body`,
-        operationId
-      );
-    }
-    cloned[key] = cloneResponseContract(contract);
+    const contractEntries = inspectDataRecord(contract, `responses.${key}`, operationId);
+    defineSafeData(cloned, key, cloneResponseContract(contractEntries, key, operationId));
   }
 
   return Object.freeze(cloned);
 }
 
+/** Validates and freezes a schema-derived REST operation while preserving exact object identity. */
 export function defineOperation<const Input extends OperationDefinitionInput>(
   definition: Input & ResponseKeyConstraint<Input>
 ): OperationDefinition<Input> {
-  const operationId = definition.id;
+  const definitionEntries = inspectDataRecord(definition, 'operation');
+  const operationId = entryValue(definitionEntries, 'id');
+  if (typeof operationId !== 'string') {
+    configurationError('Operation id must be a string.', 'id');
+  }
   if (operationId.trim().length === 0) {
     configurationError('Operation id must not be empty.', 'id');
   }
@@ -155,17 +248,18 @@ export function defineOperation<const Input extends OperationDefinitionInput>(
       operationId
     );
   }
-  if (!HTTP_METHODS.has(definition.method)) {
-    configurationError(
-      `Unsupported HTTP method "${String(definition.method)}".`,
-      'method',
-      operationId
-    );
+  const method = entryValue(definitionEntries, 'method');
+  if (typeof method !== 'string' || !HTTP_METHODS.has(method)) {
+    configurationError('Unsupported HTTP method.', 'method', operationId);
   }
-  if (!definition.path.startsWith('/')) {
+  const path = entryValue(definitionEntries, 'path');
+  if (typeof path !== 'string') {
+    configurationError('Operation path must be a string.', 'path', operationId);
+  }
+  if (!path.startsWith('/')) {
     configurationError('Operation path must start with "/".', 'path', operationId);
   }
-  if (definition.path.includes('?') || definition.path.includes('#')) {
+  if (path.includes('?') || path.includes('#')) {
     configurationError(
       'Operation path must not contain a query string or fragment.',
       'path',
@@ -173,29 +267,48 @@ export function defineOperation<const Input extends OperationDefinitionInput>(
     );
   }
   if (
-    definition.timeoutMs !== undefined &&
-    (!Number.isInteger(definition.timeoutMs) || definition.timeoutMs <= 0)
+    entryValue(definitionEntries, 'timeoutMs') !== undefined &&
+    (!Number.isInteger(entryValue(definitionEntries, 'timeoutMs')) ||
+      (entryValue(definitionEntries, 'timeoutMs') as number) <= 0)
   ) {
     configurationError('Operation timeoutMs must be a positive integer.', 'timeoutMs', operationId);
   }
   if (
-    definition.auth !== undefined &&
-    definition.auth !== false &&
-    definition.auth.trim().length === 0
+    entryValue(definitionEntries, 'auth') !== undefined &&
+    entryValue(definitionEntries, 'auth') !== false &&
+    (typeof entryValue(definitionEntries, 'auth') !== 'string' ||
+      (entryValue(definitionEntries, 'auth') as string).trim().length === 0)
   ) {
     configurationError('Operation auth profile must not be an empty string.', 'auth', operationId);
   }
 
-  validatePathParameters(definition.path, definition.request, operationId);
-  const responses = validateResponses(definition.responses, operationId);
-  const request =
-    definition.request === undefined ? undefined : Object.freeze({ ...definition.request });
+  const rawRequest = entryValue(definitionEntries, 'request');
+  let request: Readonly<OperationRequestContract> | undefined;
+  if (rawRequest !== undefined) {
+    const requestEntries = inspectDataRecord(rawRequest, 'request', operationId);
+    for (const section of ['body', 'headers', 'pathParams', 'query'] as const) {
+      const schema = entryValue(requestEntries, section);
+      if (schema !== undefined && !safeInstanceOf(schema, z.ZodType)) {
+        configurationError(
+          `Request ${section} must define a Zod schema.`,
+          `request.${section}`,
+          operationId
+        );
+      }
+    }
+    request = Object.freeze(
+      cloneEnumerableData(requestEntries)
+    ) as Readonly<OperationRequestContract>;
+  }
+  validatePathParameters(path, request, operationId);
+  const responses = validateResponses(
+    entryValue(definitionEntries, 'responses') as never,
+    operationId
+  );
 
-  const operation = {
-    ...definition,
-    ...(request === undefined ? {} : { request }),
-    responses
-  };
+  const operation = cloneEnumerableData(definitionEntries);
+  if (request !== undefined) defineSafeData(operation, 'request', request);
+  defineSafeData(operation, 'responses', responses);
   Object.defineProperty(operation, OPERATION_MARKER, {
     enumerable: false,
     value: true

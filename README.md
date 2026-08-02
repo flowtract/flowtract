@@ -9,7 +9,7 @@ Flowtract is an Apache-2.0 TypeScript framework for schema-verified, stateful
 REST API workflows. It is designed for QA engineers, SDETs, and backend teams
 testing authenticated APIs whose meaningful behavior spans multiple requests.
 
-The Gate 2 execution foundation now provides:
+The Gate 3 core production-candidate implementation now provides:
 
 - explicit `defineOperation` contracts using Zod 4 public APIs;
 - typed request inputs and transformed outputs;
@@ -22,6 +22,10 @@ The Gate 2 execution foundation now provides:
 - deterministic cleanup through a close-scoped restricted client;
 - dual ESM/CommonJS builds with declarations and source maps;
 - clean package-consumer proofs across TypeScript 5.5, 6.0, and 7.0.
+- hostile-input and fault containment with 10,000 fixed-seed property cases;
+- deterministic lifecycle-race, resource, stress, benchmark, and soak proof;
+- reviewed peer profiles, macOS CI, SBOM, and publication-dry-run proof;
+- executable packed documentation and IntelliSense coverage for every root export.
 
 Cucumber integration, the CLI, configuration-file loading, retries, reporting,
 and npm publication remain future gates. See the
@@ -34,7 +38,7 @@ Flowtract requires Node 22 or 24.
 
 ```bash
 npm ci
-npm run gate2:qa
+npm run gate3:qa
 npm run type-matrix
 npm run clean-clone:check
 ```
@@ -48,7 +52,7 @@ packages/
 ```
 
 Neither package is currently published. Only the `flowtract` root entry point
-exists during Gate 2.
+exists during Gate 3.
 
 ## Community
 

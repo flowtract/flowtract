@@ -13,6 +13,7 @@ const requiredPaths = [
   'CODE_OF_CONDUCT.md',
   'DEVELOPERS_CERTIFICATE_OF_ORIGIN.txt',
   'docs/open-source/v0.1/README.md',
+  '.github/workflows/gate3-acceptance.yml',
   'packages/flowtract/package.json',
   'packages/create-flowtract/package.json'
 ];
@@ -20,6 +21,7 @@ const requiredPaths = [
 const forbiddenRoots = ['.gap', '.vscode', 'data', 'features', 'mock-server', 'src', 'reports'];
 
 const forbiddenDependencies = [
+  '@cucumber/cucumber',
   '@playwright/test',
   '@types/jsonpath',
   'cucumber-html-reporter',
@@ -37,9 +39,21 @@ const expectedScripts = [
   'build',
   'package:check',
   'type-matrix',
+  'peer-matrix',
   'repository:check',
   'secret:check',
   'clean-clone:check',
+  'core:stress',
+  'core:benchmark',
+  'core:benchmark:compare',
+  'core:soak:smoke',
+  'core:soak',
+  'docs:check',
+  'api-docs:check',
+  'sbom:check',
+  'package:publish-dry-run',
+  'package:publish-dry-run:built',
+  'gate3:qa',
   'gate2:qa',
   'qa'
 ];
@@ -95,6 +109,30 @@ for (const dependency of forbiddenDependencies) {
   }
 }
 
+const flowtractPackage = JSON.parse(
+  await readFile(join(root, 'packages/flowtract/package.json'), 'utf8')
+);
+const flowtractExports = Object.keys(flowtractPackage.exports ?? {});
+if (flowtractExports.length !== 1 || flowtractExports[0] !== '.') {
+  throw new Error('The flowtract package must expose only its root entry point.');
+}
+if (flowtractPackage.bin !== undefined) {
+  throw new Error('The flowtract package must not expose a CLI binary during Gate 3.');
+}
+
+for (const path of packagePaths) {
+  const value = JSON.parse(await readFile(join(root, path), 'utf8'));
+  const allDependencies = new Set([
+    ...Object.keys(value.dependencies ?? {}),
+    ...Object.keys(value.devDependencies ?? {}),
+    ...Object.keys(value.optionalDependencies ?? {}),
+    ...Object.keys(value.peerDependencies ?? {})
+  ]);
+  if (allDependencies.has('@cucumber/cucumber')) {
+    throw new Error(`Cucumber coupling must not exist during Gate 3: ${path}`);
+  }
+}
+
 async function collectFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = [];
@@ -124,6 +162,28 @@ for (const path of sourceFiles) {
 
 if (await exists('data/parts.json')) {
   throw new Error('Protected prototype fixture must not exist in Flowtract.');
+}
+
+const generatedEvidence = (await collectFiles(root))
+  .map(path => relative(root, path).replaceAll('\\', '/'))
+  .filter(path => /(^|\/)(?:sbom|bom)(?:[.-].*)?\.(?:json|xml)$/iu.test(path));
+if (generatedEvidence.length > 0) {
+  throw new Error(`Generated SBOM evidence must remain untracked: ${generatedEvidence.join(', ')}`);
+}
+
+const acceptanceWorkflow = await readFile(
+  join(root, '.github/workflows/gate3-acceptance.yml'),
+  'utf8'
+);
+for (const required of [
+  'expected_sha:',
+  'npm run core:benchmark:compare',
+  'npm run core:soak',
+  '043fb46d1a93c77aae656e7c1c64a875d1fc6a0a'
+]) {
+  if (!acceptanceWorkflow.includes(required)) {
+    throw new Error(`Gate 3 acceptance workflow is missing: ${required}`);
+  }
 }
 
 console.log(
