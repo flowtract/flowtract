@@ -1,5 +1,12 @@
 # TypeScript Configuration Loader Proof
 
+> **Status:** Historical design evidence; non-normative and not authorized
+> **Reclassified:** 2026-08-02 during the Gate 3 core-hardening scope reset
+
+This proof is retained as input to a possible later Cucumber/CLI gate. It does
+not select a dependency or authorize configuration-loader implementation for
+Gate 3 or the `0.1` root-package compatibility promise.
+
 ## Decision
 
 Gate 3 uses the documented `tsImport` export from `tsx/esm/api` to import

@@ -2,7 +2,10 @@
 
 > **Historical decision note:** Gate 1.5 supersedes the repository-transfer
 > assumption below with a clean extraction into `flowtract/flowtract`. Product,
-> license, package, and public-interface decisions remain unchanged.
+> license, and root-interface decisions remain. The Gate 3 scope reset defers
+> `create-flowtract`, Cucumber, and testing subpaths beyond the `0.1` root-core
+> promise; the entries below record the original long-term direction, not an
+> implementation authorization.
 
 This sheet is the decision checkpoint between the prototype foundation and the
 Flowtract runtime refactor. It does not replace the normative documents linked
@@ -17,17 +20,16 @@ from the [specification index](README.md).
 - Scope: schema-verified, stateful REST workflows with JSON, text, and empty
   responses.
 - Primary users: TypeScript QA engineers, SDETs, and backend teams.
-- Public packages: `flowtract` and `create-flowtract`.
-- Public entry points: `flowtract`, `flowtract/cucumber`, and
-  `flowtract/testing`.
+- Immediate public package candidate: root-only `flowtract`.
+- Deferred packages/entry points: `create-flowtract`, `flowtract/cucumber`, and
+  `flowtract/testing`, subject to later approved gates.
 - Supported Node lines: 22 and 24.
 - Schema contract: Zod 4 public APIs.
 - Default transport: Playwright behind the public `HttpTransport` port.
-- Cucumber: first-class but optional.
+- Cucumber: possible optional future adapter after core acceptance.
 - Telemetry: none in v0.1.
 - Compatibility: clean pre-1.0 break from the unpublished prototype.
-- Release schedule: evidence-gated twelve-week plan, not a promise to ship by
-  calendar alone.
+- Release schedule: evidence-gated, with no calendar promise.
 
 ## Evidence already established
 

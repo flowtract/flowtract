@@ -2,7 +2,7 @@
 
 ## Configuration surface
 
-`flowtract.config.ts` is the canonical project configuration:
+Programmatic `defineConfig` input is the canonical Gate 3 configuration:
 
 ```ts
 export default defineConfig({
@@ -16,33 +16,26 @@ export default defineConfig({
       // project-owned login and extraction behavior
     })
   },
-  cucumber: {
-    features: ['features/**/*.feature'],
-    parallel: 1
-  },
   redaction: {
     jsonPaths: ['password', 'token', 'secret']
-  },
-  artifacts: {
-    directory: 'flowtract-results'
   }
 });
 ```
 
-Flowtract MUST NOT auto-load magic credentials or provide fallback usernames
-and passwords. A project may load an environment file through the CLI or use
-`process.env` explicitly in configuration.
+Flowtract MUST NOT auto-load configuration, magic credentials, or fallback
+usernames/passwords. A project passes programmatic configuration explicitly
+and may read `process.env` in project-owned code.
 
 Configuration is validated before test execution. Unknown operation IDs,
 duplicate IDs, invalid paths, missing response contracts, unknown auth
-profiles, non-positive timeouts, and unwritable artifact targets fail with
+profiles, invalid redaction settings, and non-positive timeouts fail with
 `FLOWTRACT_CONFIG`.
 
 ## Secure transport defaults
 
 - TLS certificate verification is enabled.
 - Insecure TLS requires `allowInsecureTls: true`.
-- `flowtract doctor` reports insecure TLS as a warning.
+- diagnostics report explicit insecure TLS as a warning.
 - Redirect behavior uses the transport's safe default and remains bounded.
 - Timeouts default to 30 seconds; `0` is rejected instead of disabling timeout.
 - HTTP statuses do not throw at the transport layer.
@@ -56,8 +49,8 @@ Secrets may come from:
 - a user-provided async secret function;
 - authentication provider output stored via `setSecret`.
 
-Secrets MUST NOT be accepted as committed example defaults. Generated projects
-include only placeholder names in `.env.example`; `.env` is ignored.
+Secrets MUST NOT be accepted as committed example defaults. Documentation uses
+generated placeholders and never embeds working credentials.
 
 ## Redaction
 
@@ -76,13 +69,10 @@ header names and JSON paths but may not remove built-in protections.
 
 Redaction applies to:
 
-- console output;
 - structured diagnostics;
 - dry-run output;
-- Cucumber attachments;
 - errors and nested causes;
-- request/response previews;
-- generated reports.
+- request/response previews.
 
 Redaction uses the literal string `[REDACTED]`. Secret state values are redacted
 by identity even if their key name is not in the default list.
@@ -108,42 +98,11 @@ Parsing uses content type:
 Parse errors include at most a configurable bounded preview, default 2 KiB,
 after redaction. Full raw payloads are never attached automatically.
 
-## cURL import security
+## Deferred import and artifact behavior
 
-`flowtract schema from-curl`:
-
-- accepts stdin or an explicit input file;
-- emits generated source to stdout by default;
-- writes only when `--output` is supplied;
-- never executes the cURL command;
-- strips authorization, cookies, API keys, and CSRF values;
-- generates environment placeholders for detected credentials;
-- safely escapes TypeScript identifiers and string literals;
-- reports unsupported syntax without guessing.
-
-## Artifacts
-
-The default artifact layout is:
-
-```text
-flowtract-results/
-├── summary.json
-├── cucumber-messages.ndjson
-├── junit.xml
-├── report.html
-└── diagnostics/
-```
-
-`summary.json` has a `schemaVersion` beginning at `1`. It contains run timing,
-scenario outcomes, operation counts, contract outcomes, and stable error codes.
-It excludes raw secrets and full request/response bodies.
-
-Diagnostic events also have a schema version and include timestamp, scenario,
-operation ID, phase, duration, status, error code, and redacted preview when
-enabled.
-
-Cucumber message, JUnit, and HTML output use maintained Cucumber formatters.
-Reports never open a browser automatically. HAR is outside `0.1.0`.
+cURL import, configuration-file loading, Cucumber attachments, report files,
+and artifact schemas are future design. Gate 3 keeps immutable already-redacted
+diagnostics in memory and adds no file writer or reporter surface.
 
 ## Supply-chain requirements
 
@@ -152,12 +111,12 @@ Reports never open a browser automatically. HAR is outside `0.1.0`.
 - Direct dependencies use maintained supported major versions.
 - Critical/high audit findings fail a release unless an exception identifies
   owner, affected path, mitigation, and expiry date.
-- Packages publish with npm provenance/trusted publishing.
+- A later publication uses npm provenance/trusted publishing.
 - Release archives contain only declared package files.
 - Generated packages undergo license and package-content inspection.
 
 ## Telemetry and privacy
 
 Flowtract collects no telemetry in `0.1.0`. It makes no network requests other
-than requests explicitly made by tests, npm/package operations initiated by
-the user, and optional Cucumber behavior explicitly enabled by the project.
+than requests explicitly made by tests and npm/package operations initiated by
+the user.

@@ -1,5 +1,10 @@
 # Gate 3 Public Contracts and Configuration
 
+> **Status:** Deferred design; non-normative and not authorized
+
+The types and package subpaths below are design hypotheses only. They are not
+part of Gate 3 or the `0.1` root-package compatibility promise.
+
 ## Package surfaces
 
 Gate 3 retains every accepted root export and adds only reviewed configuration

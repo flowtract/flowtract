@@ -1,178 +1,174 @@
-# Gate 3 Proof, Implementation Slices, and Approval
+# Proof, Implementation, and Approval
 
-## Preconditions
+## Approval boundary
 
-Implementation starts only after:
+This specification package is the Gate 3 deliverable. Runtime, dependency,
+test, documentation, package, and workflow implementation is not authorized
+until the repository owner approves an exact revision below.
 
-- this package is decision-complete and approved at a recorded revision;
-- the TypeScript configuration-loader proof records the selected package,
-  public API, license, ESM/CommonJS behavior, and security boundary;
-- public Cucumber contracts compile against the supported peer range without
-  private imports;
-- the branch starts clean from synchronized `main` at or after `cc30efe`.
+Approval authorizes only root-core hardening. It does not authorize Cucumber,
+configuration loading, command execution, CLI/generator work, package
+publication, or a production-ready claim.
 
-The completed proof is recorded in Document 00. It authorizes the dependency
-choice only after this package receives owner approval; it is not production
-or cross-platform acceptance evidence.
+## Implementation sequence
 
-## Implementation slices
+Use one Gate 3 implementation branch and one reviewable pull request with
+small signed commits.
 
-### Slice 1 — contracts and package topology
+### Slice 1 — Baseline, dependency debt, and compatibility harness
 
-- amend root config types;
-- add reviewed `./cucumber`, `./testing`, and binary exports;
-- establish internal command-service ports;
-- extend export snapshots and declaration consumers.
+- reproduce the clean Gate 2 baseline;
+- remove the unused optional Cucumber peer;
+- advance development `esbuild` to the patched line;
+- add minimum/latest peer consumers and macOS/Node 24 CI;
+- lock the root export and compatibility snapshot.
 
-**Gate:** root Gate 1/2 consumers remain compatible; optional Cucumber absence
-does not break root import.
+**Proof:** dependency, build, archive, root export, compiler, and installed
+consumer checks pass without a public-surface change.
 
-### Slice 2 — configuration and command kernel
+### Slice 2 — Hostile inputs, fault injection, and redaction
 
-- implement deterministic config selection/import and environment parsing;
-- implement CLI parser, envelopes, exit mapping, streams, and doctor/list;
-- prove no config search escape or secret output.
+- add fixed-seed property generators and replay support;
+- add the complete callback/transport/provider fault matrix;
+- exercise accessors, proxies, cycles, deep/large values, thrown primitives,
+  and non-extensible errors;
+- scan every error and diagnostic representation for generated secrets.
 
-**Gate:** table-driven command/config/security proof passes on ESM and CommonJS
-projects.
+**Proof:** 10,000 hostile cases and every failure phase remain bounded,
+redacted, stable, and cleanup-safe.
 
-### Slice 3 — Cucumber adapter
+### Slice 3 — Lifecycle races and resource conformance
 
-- implement explicit World/support/step installers;
-- bind one scenario per pickle/attempt;
-- compose hook, step, cleanup, and attachment failures;
-- prove domain and generic steps in parallel.
+- add deterministic scheduling barriers;
+- exercise execute/close, abort/response, auth, and cleanup races 100 times;
+- add internal transport/provider ownership counters;
+- expand Playwright CRUD concurrency to at least 16 scenarios.
 
-**Gate:** lifecycle and isolation proof passes with optional peer present and
-root import passes with it absent.
+**Proof:** all ownership balances, isolation assertions, and lifecycle outcomes
+pass with zero live resource.
 
-### Slice 4 — worker and artifact lifecycle
+### Slice 4 — Stress, benchmark, and soak
 
-- implement test worker protocol and signal forwarding;
-- aggregate schema-versioned redacted artifacts;
-- prove interruption, timeout, malformed worker output, and formatter failure.
+- add sequential and concurrent custom-transport stress profiles;
+- record a same-host Gate 2 performance baseline;
+- add `core:soak` with fixed seeds, resource accounting, forced-GC heap
+  samples, and machine-readable summary;
+- run the soak acceptance on Windows and Ubuntu Node 24.
 
-**Gate:** no process, pipe, handle, socket, response, transport, temp file, or
-secret remains on Windows or Ubuntu.
+**Proof:** the quantitative reliability, performance, and soak requirements in
+Document 02 pass on the candidate.
 
-### Slice 5 — generator and cURL importer
+### Slice 5 — Core DX and package proof
 
-- implement shared transactional generator;
-- add programmatic and Cucumber templates;
-- implement bounded non-executing cURL parser and redacted source output.
+- document all root exports and accepted lifecycle/security boundaries;
+- implement the executable quick start and focused examples;
+- add the complete error/troubleshooting catalog;
+- extend packed ESM/CommonJS/TypeScript and peer-version consumers;
+- generate the untracked CycloneDX SBOM and publication dry run.
 
-**Gate:** traversal, symlink, collision, force, rollback, credential stripping,
-and unsupported syntax cases pass.
+**Proof:** clean consumers use only the tarball, all snippets compile/execute,
+and the archive contains only reviewed files.
 
-### Slice 6 — package and onboarding proof
+### Slice 6 — Cross-platform security closure
 
-- execute packed CLI, Cucumber, testing, and generator consumers;
-- scaffold into fresh directories and run exact documented commands;
-- extend compiler matrix and archive allowlists;
-- update documentation and changelog.
+- run Windows/Ubuntu Node 22/24 and macOS Node 24;
+- run compiler, clean-clone, CodeQL, Dependency Review, DCO, audit, secret,
+  package, and repository-integrity gates;
+- review the final diff against this specification and non-goals;
+- update the changelog and completion record only after all proof passes.
 
-**Gate:** Windows/Ubuntu onboarding completes in under ten minutes with no
-repository mutation or orphaned process.
+**Proof:** every required check passes on one immutable final SHA with no open
+correctness, security, portability, resource, packaging, or documentation
+blocker.
 
-### Slice 7 — acceptance
+## Quantitative acceptance
 
-- run local and clean-clone Gate 3 QA;
-- run protected Windows/Ubuntu Node 22/24, declarations, DCO, Dependency Review,
-  CodeQL, and secret scan;
-- perform semantic review of every public, security, lifecycle, filesystem, and
-  process boundary.
+The final candidate must satisfy all of these:
 
-**Gate:** final SHA has no unresolved blocker; merge remains separately
-authorized.
+- at least 90% statements, lines, and functions and 85% branches;
+- existing Gate 1/Gate 2 cases plus every named Gate 3 case pass;
+- 100 schedules for each required lifecycle race family;
+- 1,000 sequential scenario cycles;
+- 64 concurrent custom-transport scenarios;
+- at least 16 concurrent Playwright authenticated CRUD scenarios;
+- at least 10,000 replayable hostile cases;
+- 15-minute/10,000-operation soak on Windows and Ubuntu Node 24;
+- 10,000-operation custom benchmark under 10 seconds and within 20% of the
+  same-host Gate 2 baseline;
+- normal QA and package proof each below 60 seconds under their documented
+  exclusions;
+- zero leaked resources, generated-secret occurrences, tracked mutations,
+  production vulnerabilities, and new branch CodeQL alerts.
 
-## Required tests
+Coverage or timing thresholds, iterations, concurrency, redaction assertions,
+and platform lanes must not be weakened to accept a failing candidate.
 
-Unit and type proof covers:
+## Required final commands
 
-- config discovery ambiguity, module forms, factory single-flight, invalid
-  exports, environment precedence/denials, and path containment;
-- CLI grammar, every exit code, JSON envelope, stdout/stderr separation, color,
-  help/version, and error composition;
-- World construction, hook order, scenario/attempt isolation, generic step
-  parsing, domain wrappers, auth selection, unsafe visibility, cleanup, and
-  attachment redaction;
-- worker framing, concurrency, retries, fail-fast, signals, forced shutdown,
-  crash/malformed output, and artifact transaction rollback;
-- generator empty/non-empty/symlink/reparse/traversal/force/rollback behavior;
-- cURL credential stripping, escaping, repeated values, malformed input, and
-  explicit unsupported forms;
-- testing-utility request copies, queues, counters, disposal, and redaction;
-- every public declaration on TypeScript 5.5.4, 6.0.2, and 7.0.2.
+The implementation must expose stable repository scripts for the complete
+proof. Final local verification includes at least:
 
-Integration proof includes:
-
-- packed ESM and CommonJS programmatic projects;
-- packed Cucumber projects with the peer installed and root-only projects
-  without it;
-- eight parallel authenticated scenarios plus retries with unique cookies and
-  CSRF values;
-- cleanup operations after failed steps and failed attachments;
-- interactive and deterministic generator modes without network install;
-- a generated programmatic project and generated Cucumber project executing
-  against the Gate 2 proof service;
-- SIGINT/SIGTERM and Windows process-tree cleanup;
-- zero generated-secret occurrence across console, JSON, messages, JUnit, HTML,
-  diagnostics, errors, filenames, and source drafts;
-- zero tracked mutation and normal parent/worker termination.
-
-## Quantitative gates
-
-- at least 90% statements, lines, and functions and 85% branches per publishable
-  package with a combined report;
-- CLI/Cucumber runtime proof under 90 seconds per CI lane, excluding install and
-  package compilation;
-- package proof under 90 seconds;
-- generator without install under five seconds;
-- worker graceful shutdown within five seconds plus a bounded forced-shutdown
-  interval;
-- fresh scaffold-to-first-pass under ten minutes on Windows and Ubuntu;
-- zero production critical/high audit vulnerability;
-- zero new open CodeQL alert;
-- packed archives contain only approved files.
-
-## Final commands
-
-The implementation plan may refine script names, but Gate 3 must expose one
-canonical `gate3:qa` command and retain `qa` as its compatibility alias. Final
-acceptance includes:
-
-```text
+```powershell
 npm ci --ignore-scripts
 npm run gate3:qa
 npm run type-matrix
 npm run clean-clone:check
+npm run core:soak
 npm audit --omit=dev --audit-level=high
+npm sbom --sbom-format cyclonedx
+npm publish --dry-run --workspace flowtract
 git diff --check
 git status --short
 ```
 
-## Decisions requiring owner approval
+SBOM and dry-run artifacts remain untracked. The cross-platform soak may be
+executed through manual release-blocking workflows, but its durable run URLs
+must identify the final candidate SHA.
 
-Approval confirms:
+## Failure policy
 
-- Gate 3 includes Cucumber, CLI, generator, config loading, testing utilities,
-  artifacts, and process lifecycle as one gate;
-- exact root/subpath/binary surfaces;
-- config discovery and trusted-code boundary;
-- environment precedence and denied process-control variables;
-- explicit generic-step installation and retry isolation;
-- artifact schema, limits, and transaction behavior;
-- child-process and termination model;
-- generator force/rollback policy;
-- cURL subset and credential stripping;
-- quantitative gates and non-goals.
+Correctness, security, portability, resource, packaging, compatibility, or
+documentation failures stop acceptance and produce a bounded remediation.
+Only a confirmed infrastructure failure may receive one unchanged rerun.
+Every candidate-changing push invalidates earlier candidate-specific evidence.
 
-The specification has no deliberately unresolved implementation choice. The
-repository owner records approval here before runtime coding:
+## Specification approval
 
-| Field             | Value            |
-| ----------------- | ---------------- |
-| Decision          | Pending          |
-| Approved by       | Repository owner |
-| Approval date     | —                |
-| Approved revision | —                |
+The repository owner must confirm:
+
+- the core production-candidate meaning and production-ready non-claim;
+- the root-only API freeze and compatibility rules;
+- lifecycle, race, fault, resource, stress, performance, and soak contracts;
+- threat model, redaction, dependency, and supply-chain gates;
+- DX, package, platform, compiler, and peer-version profiles;
+- deferred Cucumber/CLI and command-target boundaries;
+- all explicit non-goals.
+
+| Field             | Value                                |
+| ----------------- | ------------------------------------ |
+| Decision          | Pending                              |
+| Approved by       | Pending                              |
+| Approval date     | Pending                              |
+| Approved revision | Pending                              |
+| Authorization     | Root-core Gate 3 implementation only |
+
+After approval, prepare a decision-preserving implementation plan against the
+approved SHA. Any required deviation stops work until an amended revision is
+approved.
+
+## Completion record
+
+This table remains pending until the implementation is accepted and merged:
+
+| Field                     | Value   |
+| ------------------------- | ------- |
+| Core production-candidate | Pending |
+| Accepted revision         | Pending |
+| Acceptance PR             | Pending |
+| Cross-platform proof      | Pending |
+| Soak/performance proof    | Pending |
+| Security proof            | Pending |
+| Package/compiler proof    | Pending |
+
+The project remains unpublished and not production ready after specification
+approval and throughout implementation.

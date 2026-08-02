@@ -1,5 +1,10 @@
 # Gate 3 Cucumber Lifecycle and Artifacts
 
+> **Status:** Deferred design; non-normative and not authorized
+
+This lifecycle proposal is retained for later review after core
+production-candidate acceptance. It authorizes no adapter implementation.
+
 ## Hook ordering
 
 The installed support library uses public Cucumber APIs and deterministic hook

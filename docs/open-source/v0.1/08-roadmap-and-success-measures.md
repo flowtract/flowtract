@@ -1,113 +1,96 @@
 # Roadmap and Success Measures
 
-## Twelve-week delivery
+## Evidence-gated sequence
 
-### Weeks 1–2
+The roadmap is ordered by proof, not calendar dates.
 
-- approve this canonical package;
-- establish project identity, license, governance, and security foundation;
-- reserve names after diligence;
-- record baseline and migration mapping.
+### Accepted foundation
 
-### Weeks 3–4
+- Gate 0: canonical product/security/governance specification;
+- Gate 1/1.5: typed operation contracts, package consumers, and clean public
+  repository;
+- Gate 2: immutable runtime, transport, scenario lifecycle, auth, state,
+  interpolation, cleanup, redaction, diagnostics, and parallel HTTP proof.
 
-- establish npm workspaces and package exports;
-- implement operation DSL, types, errors, and Zod 4 parsing;
-- port example operations;
-- pass installed-consumer type proof.
+### Gate 3 — core production-candidate hardening
 
-### Weeks 5–6
+- freeze the root compatibility boundary;
+- prove hostile inputs and every external failure phase;
+- prove deterministic lifecycle races and resource ownership;
+- add stress, benchmark, and Windows/Ubuntu soak evidence;
+- add macOS and minimum/latest peer compatibility;
+- complete root-runtime DX, package, SBOM, and security proof.
 
-- implement transport, Playwright adapter, scenario lifecycle, auth, state,
-  interpolation, cleanup, configuration, and redaction;
-- prove authenticated parallel CRUD without tracked mutations.
+Gate 3 may produce the technical verdict `Core production-candidate proof:
+Passed`. It does not publish a package or claim the product is production
+ready.
 
-### Weeks 7–8
+### Gate 4 — developer preview and external evaluation
 
-- implement Cucumber adapter, domain wrapper example, CLI, generator, and
-  deterministic process lifecycle;
-- prove ten-minute onboarding on Windows and Linux.
+Subject to separate authorization:
 
-### Weeks 9–10
+- publish the root package with provenance and documented limitations;
+- deploy documentation and executable examples;
+- recruit at least five real-world repositories/design partners;
+- measure first-success time, defects, support load, and missing core
+  capabilities;
+- resolve release-blocking user evidence before expanding adapters.
 
-- complete documentation site, API reference, examples, packaging/security
-  automation, and beta;
-- run five design-partner evaluations.
+### Later evidence-gated capabilities
 
-### Week 11
+Subject to user evidence and separate canonical specifications:
 
-- resolve beta blockers;
-- freeze `0.1` public API;
-- publish and validate release candidate.
+- optional Cucumber adapter and domain-step guidance;
+- project CLI, configuration loader, generator, and artifact/report surfaces;
+- local command-target execution;
+- OpenAPI import/export and contract-coverage reports;
+- polling/eventual-consistency helpers and validated extension interfaces;
+- multipart/form and bounded binary support;
+- additional protocols or hosted services.
 
-### Week 12
+These items are not part of the `0.1` root-package compatibility promise until
+an approved release decision says otherwise.
 
-- publish `0.1.0` with provenance;
-- deploy documentation and examples;
-- open public discussions and evidence-gated roadmap.
+## External success measures
 
-## First 90-day success measures
+After publication, measure:
 
-- median first successful run under ten minutes;
+- median first successful root-runtime scenario under ten minutes;
 - at least five external real-world repositories;
-- at least three production design partners before any production-readiness
-  claim;
-- at least two external contributors;
-- at least ten meaningful issues/discussions;
+- at least three production design partners before a production-ready claim;
 - initial maintainer response within two business days;
-- monthly patch/minor release rhythm where changes exist;
-- zero unresolved critical/high security findings.
+- zero unresolved critical/high security findings;
+- compatibility and migration evidence across actual releases.
 
-## v0.2 candidates
+## Production-ready gate
 
-Subject to user evidence:
+Flowtract may claim production ready only when:
 
-- OpenAPI import/export;
-- contract coverage reports;
-- polling/eventual-consistency helpers;
-- validated extension interfaces;
-- richer operation discovery.
+- public API stability has been exercised across at least two minor releases;
+- at least three teams have used it in production for at least 90 days;
+- cross-platform package, transport, lifecycle, and resource reliability is
+  demonstrated on released artifacts;
+- compatibility, deprecation, support, and security-response policies have
+  been exercised;
+- no major correctness or security blocker remains;
+- migration and limitation material is complete.
 
-OpenAPI work MUST preserve Flowtract's explicit workflow model rather than
-turning generated endpoint coverage into the only test model.
+## Separate-spec requirement
 
-## v0.3 candidates
+Runner adapters, command execution, configuration loaders, CLIs, generators,
+GraphQL, SOAP, gRPC, WebSockets/SSE, UI/load/database testing, schema-neutral
+adapters, and hosted services require separate specifications and approval.
+They must not enter core hardening opportunistically.
 
-Subject to user evidence:
+## Claim ladder
 
-- multipart and form requests;
-- bounded binary download support;
-- richer test-data lifecycle;
-- optional native-fetch transport after parity proof;
-- expanded diagnostics/reporting.
-
-## v1.0 gate
-
-`1.0.0` is evidence-driven, not calendar-driven. It requires:
-
-- public API stability across at least two minor releases;
-- three teams using Flowtract in production for at least 90 days;
-- cross-platform package and process reliability;
-- documented compatibility/deprecation policy;
-- no major correctness or security blocker;
-- stable extension interfaces used outside the repository;
-- complete migration material.
-
-## Separate-spec requirements
-
-GraphQL, SOAP, gRPC, WebSockets/SSE, UI testing, load testing, database
-assertions, schema-neutral adapters, and hosted services require separate
-canonical specifications and approval. They MUST NOT be added as opportunistic
-`0.1` extensions.
-
-## Release claim ladder
-
-Use only the highest proven label:
+Use only the highest proven project label:
 
 1. **Prototype** — repository-local proof;
 2. **Developer preview** — published package with documented limitations;
 3. **Beta** — external design-partner proof;
-4. **Production candidate** — production profiles and operational proof;
+4. **Production candidate** — production profiles plus operational and external
+   evidence;
 5. **Production ready** — sustained production evidence and support policy.
 
-`0.1.0` targets **Developer preview**.
+Gate 3's bounded core verdict does not skip this project-level ladder.

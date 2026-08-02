@@ -2,181 +2,113 @@
 
 ## Test layers
 
-### Unit
+### Contracts and unit behavior
 
-Unit tests cover:
-
-- operation definition and duplicate registration;
-- request input/output transformations;
-- exact/default status selection and result narrowing;
-- JSON, text, empty, and malformed responses;
-- path encoding and path/schema mismatch;
-- interpolation type preservation, nesting, missing values, secrets, and cycles;
-- configuration precedence;
-- redaction at every output boundary;
-- auth provider lifecycle;
-- cleanup ordering and aggregated failure behavior;
-- every public error code and CLI exit code.
+Tests cover operation definition, typed request/response transforms,
+exact/default status selection, interpolation, normalization, auth, dry run,
+errors, diagnostics, history, cleanup, configuration, redaction, and every
+public code/phase boundary.
 
 ### Transport integration
 
-A local in-memory/temporary-state server proves:
+The in-process HTTP/HTTPS service proves isolated cookies, bearer/API-key/basic
+and session/CSRF auth, TLS, redirect bounds, timeout/abort distinction,
+declared errors, malformed responses, parallel execution, cleanup I/O, and
+deterministic disposal. Tests use generated credentials and temporary or
+in-memory state.
 
-- isolated cookies across scenarios;
-- session login and CSRF injection;
-- bearer, API key, and basic providers;
-- timeout and cancellation;
-- secure and explicitly insecure TLS configuration;
-- redirects and declared HTTP error statuses;
-- malformed JSON diagnostics;
-- parallel execution and deterministic disposal.
+### Gate 3 resilience
 
-Tests MUST NOT write tracked fixtures.
+Gate 3 adds fixed-seed hostile inputs, every-phase fault injection,
+deterministic lifecycle race schedules, high-count sequential/concurrent
+stress, resource accounting, a performance comparison, and a 15-minute soak.
+Exact quantities and failure policy are normative in the
+[Gate 3 proof specification](gate-3/05-proof-implementation-and-approval.md).
 
-### Cucumber end-to-end
+### Package consumers and documentation
 
-End-to-end suites prove:
+CI packs `flowtract` and installs the tarball into clean ESM, CommonJS, and
+TypeScript consumers. Minimum/latest peer combinations, compiler versions,
+source/declaration maps, archive contents, root exports, and executable
+documentation examples are verified without source imports.
 
-- World and hook lifecycle;
-- generic steps and domain wrapper steps;
-- DocString, DataTable, and file payloads;
-- status and field assertions;
-- variable capture and interpolation;
-- negative request testing;
-- tags, parallelism, fail-fast, and scenario retry;
-- redacted attachments and artifacts;
-- cleanup after step and hook failures;
-- complete process termination on Windows and Linux.
+## Coverage and quality floors
 
-### CLI
-
-CLI tests cover every command, option, JSON envelope, exit code, invalid config,
-unsupported runtime, signal, child-process failure, and safe file-write
-behavior.
-
-### Package consumer
-
-CI packs both npm packages and installs tarballs into clean temporary consumers:
-
-- ESM JavaScript;
-- CommonJS JavaScript;
-- TypeScript programmatic;
-- TypeScript Cucumber.
-
-Each fixture compiles and executes at least one operation. No fixture imports a
-source path or undeclared deep export.
-
-### Documentation
-
-Every code sample is compiled or executed. Quick-start commands run from a
-clean temporary directory. Links and the VitePress production build are
-validated.
-
-## Coverage and quality gates
-
-Core runtime requires:
+Core runtime requires at least:
 
 - 90% statements;
 - 90% lines;
 - 90% functions;
 - 85% branches.
 
-Coverage is a release floor, not a substitute for scenario coverage.
+Coverage is a floor, not a substitute for named scenario evidence. Additional
+gates require zero lint/type errors, a reviewed export snapshot, successful
+strict package linting, no tracked mutation, no leaked resource, no generated
+secret occurrence, no unapproved critical/high finding, and only approved
+archive files.
 
-Additional gates:
+Normal runtime/coverage proof and package proof each complete in less than 60
+seconds under their documented exclusions. Soak execution is separate.
 
-- type-check and lint have zero errors;
-- public-package build has zero unresolved warnings;
-- export surface is snapshotted and reviewed;
-- full mock suite completes in less than 60 seconds;
-- no tracked file changes after tests;
-- no orphaned child process;
-- no unapproved critical/high dependency finding;
-- package archives contain only approved files.
+## Required matrix
 
-## CI matrix
-
-Release-blocking:
+Release-blocking for Gate 3:
 
 - Ubuntu latest, Node 22 and 24;
-- Windows latest, Node 22 and 24.
+- Windows latest, Node 22 and 24;
+- macOS latest, Node 24;
+- TypeScript 5.5.4, 6.0.2, and 7.0.2;
+- minimum and latest supported Zod 4 and Playwright;
+- CodeQL, Dependency Review, DCO, secret scan, production audit, SBOM,
+  clean-clone, package, and repository-integrity evidence.
 
-Non-blocking until promoted:
+## Gate sequence
 
-- macOS latest on Node 24;
-- current Node release.
+### Gate 0 — canonical foundation
 
-Pull requests run formatting check, lint, type tests, unit, integration, E2E,
-CLI, package-consumer, documentation, license, secret scanning, and dependency
-review as applicable.
+Product, public API, security, governance, and clean-repository boundaries were
+approved.
 
-## Release sequence
+### Gate 1/1.5 — typed contracts and public repository
 
-### Gate 0 — specification
-
-- canonical specification approved;
-- license/governance foundation present;
-- name and repository identity confirmed;
-- no unresolved public-interface decision.
-
-### Gate 1 — typed contracts
-
-**Implementation status:** accepted and proven on Windows and Ubuntu with
-Node.js 22 and 24. Gate 1.5 activated the clean public repository and repeated
-the package, compiler, CodeQL, and Scorecard proof.
-
-- workspaces and exports established;
-- `defineOperation` and result unions complete;
-- example contracts ported;
-- clean consumer type proof passes without private Zod APIs.
+Typed operation/result contracts, dual package output, installed consumers,
+compiler proof, and clean public extraction were accepted.
 
 ### Gate 2 — execution foundation
 
-**Implementation status:** accepted through PR #9 at merge revision `cc30efe`.
+Accepted through PR #9 at `cc30efe`: transport, isolated scenarios, auth,
+interpolation, cleanup, redaction, diagnostics, and authenticated CRUD proof.
 
-- canonical Gate 2 specification approved;
-- transport port and Playwright adapter complete;
-- scenario, auth, interpolation, cleanup, redaction, and secure config complete;
-- authenticated CRUD proof passes in parallel without tracked changes.
+### Gate 3 — core production-candidate hardening
 
-### Gate 3 — Cucumber and CLI
+The root core must pass the approved compatibility, hostile-input, fault,
+lifecycle, stress, soak, security, packaging, and DX profiles. No adapter, CLI,
+command target, publication, or production-ready claim is included.
 
-- adapter, CLI, generator, diagnostics, and process lifecycle complete;
-- new user scaffolds and runs a project on Windows and Linux in under ten
-  minutes.
+### Gate 4 — developer preview and external evaluation
 
-### Gate 4 — beta
+After Gate 3 acceptance, a separate approved action may publish a developer
+preview with provenance, deploy documentation, and begin external design-partner
+evaluation.
 
-- docs, examples, package proofs, and security automation complete;
-- `0.1.0-beta.1` tested by five design partners;
-- at least four complete onboarding and author one workflow without maintainer
-  intervention.
+### Later evidence-gated capabilities
 
-### Release candidate
+Cucumber, project CLI, generator, configuration loading, command execution,
+additional protocols, and richer reporting require separate approved gates.
 
-- beta blockers closed;
-- public API frozen for `0.1`;
-- security and dependency review complete;
-- `0.1.0-rc.1` passes all clean-clone gates.
+### Production ready
 
-### Developer preview
+Production readiness requires sustained production evidence: at least three
+teams for at least 90 days, exercised support/compatibility policy, and no open
+major correctness or security blocker.
 
-- `flowtract@0.1.0` and `create-flowtract@0.1.0` publish with provenance;
-- documentation and examples deploy;
-- changelog, migration guide, limitations, and release notes are public.
+## Failure policy
 
-## Release failure policy
+Acceptance stops for secret disclosure, incorrect contract behavior,
+cross-scenario leakage, cleanup/resource leakage, unsupported public import,
+package-consumer failure, platform divergence, critical/high unapproved
+vulnerability, or documentation that claims unimplemented behavior.
 
-A release stops for:
-
-- secret disclosure;
-- incorrect contract acceptance/rejection;
-- scenario state leakage;
-- cleanup or child-process leakage;
-- package-consumer failure;
-- unsupported deep import required by examples;
-- critical/high vulnerability without approved exception;
-- documentation that claims unimplemented behavior.
-
-Near-zero defects are not inferred from passing unit tests. Each gate requires
-its named executable proof.
+Only a confirmed infrastructure failure may receive one unchanged rerun.
+Thresholds, schedules, concurrency, scans, redaction assertions, and platform
+lanes must not be weakened to make a candidate pass.

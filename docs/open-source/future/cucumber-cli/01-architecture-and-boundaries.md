@@ -1,5 +1,10 @@
 # Gate 3 Architecture and Boundaries
 
+> **Status:** Deferred design; non-normative and not authorized
+
+This document describes the superseded Cucumber/CLI Gate 3 proposal. It must
+be revalidated against the accepted core before any later implementation.
+
 ## Baseline that must not regress
 
 Gate 3 builds on the accepted Gate 2 runtime. It does not create another HTTP,

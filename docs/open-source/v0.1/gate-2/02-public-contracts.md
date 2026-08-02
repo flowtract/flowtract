@@ -62,7 +62,8 @@ Validation includes:
 - `allowInsecureTls` defaults to `false`;
 - built-in redaction protections cannot be removed.
 
-Gate 2 does not load `flowtract.config.ts`; Gate 3 owns config discovery.
+Gate 2 does not load `flowtract.config.ts`; configuration discovery remains a
+later separately approved capability after the root-core Gate 3.
 
 ## Runtime and scenario
 

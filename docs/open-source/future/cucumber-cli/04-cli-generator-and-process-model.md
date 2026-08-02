@@ -1,5 +1,10 @@
 # Gate 3 CLI, Generator, and Process Model
 
+> **Status:** Deferred design; non-normative and not authorized
+
+This command grammar and process model are future design input only. They do
+not authorize a CLI, generator, binary, or package export.
+
 ## CLI grammar
 
 ```text

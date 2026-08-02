@@ -15,12 +15,12 @@ The main `flowtract` entry point exports:
 - result, configuration, and error types;
 - `emptyBody`.
 
-`flowtract/cucumber` and `flowtract/testing` are specified separately.
+Only the root package is supported. Cucumber, testing, command, CLI, and
+configuration-loader subpaths are not part of the `0.1` compatibility promise.
 
 The decision-complete Gate 2 signatures and lifecycle refinements are defined
-in the [Gate 2 public contracts](gate-2/02-public-contracts.md) and implemented
-on the Gate 2 branch. Cross-platform CI and pull-request review remain required
-before acceptance.
+in the [Gate 2 public contracts](gate-2/02-public-contracts.md) and accepted at
+`cc30efe`. Gate 3 hardens this surface without adding exports.
 
 ## Operation definition
 
