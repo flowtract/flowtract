@@ -29,6 +29,11 @@
     "repository:check": "node scripts/repository-check.mjs",
     "secret:check": "node scripts/secret-scan.mjs",
     "clean-clone:check": "node scripts/clean-clone-check.mjs",
+    "core:stress": "npm run test -- packages/flowtract/test/stress.test.ts packages/flowtract/test/resource-conformance.test.ts packages/flowtract/test/playwright-proof.test.ts",
+    "core:benchmark": "node scripts/core-benchmark.mjs",
+    "core:benchmark:compare": "node scripts/core-benchmark.mjs --compare",
+    "core:soak:smoke": "node scripts/core-soak.mjs --smoke",
+    "core:soak": "node scripts/core-soak.mjs",
     "gate2:qa": "node scripts/qa.mjs",
     "qa": "npm run gate2:qa"
   },

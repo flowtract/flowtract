@@ -41,6 +41,11 @@ const expectedScripts = [
   'repository:check',
   'secret:check',
   'clean-clone:check',
+  'core:stress',
+  'core:benchmark',
+  'core:benchmark:compare',
+  'core:soak:smoke',
+  'core:soak',
   'gate2:qa',
   'qa'
 ];
