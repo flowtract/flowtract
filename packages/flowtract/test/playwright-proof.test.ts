@@ -72,8 +72,8 @@ afterAll(async () => {
   await server.close();
 });
 
-describe('Playwright Gate 2 proof', () => {
-  it('executes eight isolated session/CSRF CRUD scenarios in parallel', async () => {
+describe('Playwright Gate 3 proof', () => {
+  it('executes sixteen isolated session/CSRF CRUD scenarios in parallel', async () => {
     const runtime = createFlowtract({
       baseURL: server.baseURL,
       operations: [Login, Create, Get, Update, Delete],
@@ -93,7 +93,7 @@ describe('Playwright Gate 2 proof', () => {
         })
       }
     });
-    const count = 8;
+    const count = 16;
     const ids: string[] = [];
     let release!: () => void;
     const allCreated = new Promise<void>(resolve => {
