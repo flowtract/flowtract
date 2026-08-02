@@ -39,42 +39,32 @@ export function safePrimitiveText(value: unknown): string | undefined {
 export function safeOwnEntries(value: unknown): SafeOwnEntriesResult {
   if (!objectLike(value)) return { ok: false, entries: [] };
   let prototype: object | null;
-  let keys: readonly PropertyKey[];
+  let descriptors: PropertyDescriptorMap;
   try {
     prototype = Reflect.getPrototypeOf(value);
-    keys = Reflect.ownKeys(value);
+    descriptors = Object.getOwnPropertyDescriptors(value);
   } catch {
     return { ok: false, entries: [] };
   }
 
   const entries: SafeOwnEntry[] = [];
-  for (const key of keys) {
-    if (typeof key !== 'string') continue;
-    let descriptor: PropertyDescriptor | undefined;
-    try {
-      descriptor = Reflect.getOwnPropertyDescriptor(value, key);
-    } catch {
-      return { ok: false, entries: [] };
-    }
-    if (descriptor === undefined) continue;
+  for (const [key, descriptor] of Object.entries(descriptors)) {
     entries.push(
-      Object.freeze(
-        'value' in descriptor
-          ? {
-              key,
-              enumerable: descriptor.enumerable === true,
-              kind: 'data' as const,
-              value: descriptor.value
-            }
-          : {
-              key,
-              enumerable: descriptor.enumerable === true,
-              kind: 'accessor' as const
-            }
-      )
+      'value' in descriptor
+        ? {
+            key,
+            enumerable: descriptor.enumerable === true,
+            kind: 'data' as const,
+            value: descriptor.value
+          }
+        : {
+            key,
+            enumerable: descriptor.enumerable === true,
+            kind: 'accessor' as const
+          }
     );
   }
-  return { ok: true, entries: Object.freeze(entries), prototype };
+  return { ok: true, entries, prototype };
 }
 
 export function safeOwnData(value: unknown, key: string): unknown {
@@ -103,21 +93,27 @@ export function safeDataProperty(value: unknown, key: string): unknown {
 }
 
 export function safeArrayValues(value: unknown): readonly unknown[] | undefined {
-  if (!Array.isArray(value)) return undefined;
-  const inspected = safeOwnEntries(value);
-  if (!inspected.ok) return undefined;
+  try {
+    if (!Array.isArray(value)) return undefined;
+  } catch {
+    return undefined;
+  }
   const length = safeOwnData(value, 'length');
   if (!Number.isSafeInteger(length) || (length as number) < 0 || (length as number) > 100_000) {
     return undefined;
   }
   const values: unknown[] = [];
-  const byKey = new Map(inspected.entries.map(entry => [entry.key, entry]));
   for (let index = 0; index < (length as number); index += 1) {
-    const entry = byKey.get(String(index));
-    if (entry === undefined || entry.kind !== 'data') return undefined;
-    values.push(entry.value);
+    let descriptor: PropertyDescriptor | undefined;
+    try {
+      descriptor = Reflect.getOwnPropertyDescriptor(value, String(index));
+    } catch {
+      return undefined;
+    }
+    if (descriptor === undefined || !('value' in descriptor)) return undefined;
+    values.push(descriptor.value);
   }
-  return Object.freeze(values);
+  return values;
 }
 
 export function defineSafeData(target: object, key: string, value: unknown): void {
@@ -173,7 +169,9 @@ export function safeSnapshot(value: unknown, options: SafeSnapshotOptions = {}):
       return '[Object]';
     }
 
-    const output: unknown[] | Record<string, unknown> = isArray ? [] : {};
+    const output: unknown[] | Record<string, unknown> = isArray
+      ? []
+      : (Object.create(null) as Record<string, unknown>);
     for (const entry of inspected.entries) {
       if (!entry.enumerable || (isArray && entry.key === 'length')) continue;
       const nextPath = [...path, entry.key];
@@ -183,7 +181,8 @@ export function safeSnapshot(value: unknown, options: SafeSnapshotOptions = {}):
           : entry.kind === 'accessor'
             ? '[Accessor]'
             : visit(entry.value, nextPath, depth + 1);
-      defineSafeData(output, entry.key, nested);
+      if (isArray) defineSafeData(output, entry.key, nested);
+      else (output as Record<string, unknown>)[entry.key] = nested;
     }
     return Object.freeze(output);
   };
@@ -244,13 +243,13 @@ export function safeJsonValue(value: unknown): SafeJsonResult {
       return { ok: true, value: output };
     }
 
-    const output: Record<string, unknown> = {};
+    const output = Object.create(null) as Record<string, unknown>;
     for (const entry of inspected.entries) {
       if (!entry.enumerable) continue;
       if (entry.kind !== 'data') return { ok: false };
       const nested = visit(entry.value, depth + 1, false);
       if (!nested.ok) return { ok: false };
-      if (nested.omitted !== true) defineSafeData(output, entry.key, nested.value);
+      if (nested.omitted !== true) output[entry.key] = nested.value;
     }
     return { ok: true, value: output };
   };

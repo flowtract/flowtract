@@ -68,11 +68,75 @@ async function measure(name, tarball) {
   return JSON.parse(line.slice('FLOWTRACT_BENCHMARK '.length));
 }
 
+async function compareConsumers(candidateTarball, baselineTarball) {
+  const candidateRoot = await prepareConsumer('comparison-candidate', candidateTarball);
+  const baselineRoot = await prepareConsumer('comparison-baseline', baselineTarball);
+  const fixture = path.join(root, 'scripts', 'fixtures', 'benchmark-compare-consumer.mjs');
+  const output = run(process.execPath, [fixture, candidateRoot, baselineRoot], { capture: true });
+  const line = output
+    .split(/\r?\n/u)
+    .find(candidate => candidate.startsWith('FLOWTRACT_BENCHMARK_COMPARE '));
+  if (line === undefined) throw new Error('Comparison benchmark did not produce a result.');
+  return JSON.parse(line.slice('FLOWTRACT_BENCHMARK_COMPARE '.length));
+}
+
+async function prepareConsumer(name, tarball) {
+  const consumer = path.join(temporaryRoot, `consumer-${name}`);
+  await mkdir(consumer, { recursive: true });
+  await writeFile(
+    path.join(consumer, 'package.json'),
+    `${JSON.stringify({ private: true, type: 'module' }, null, 2)}\n`,
+    'utf8'
+  );
+  npm(
+    [
+      'install',
+      '--ignore-scripts',
+      '--no-audit',
+      '--no-fund',
+      '--no-package-lock',
+      tarball,
+      'zod@4.4.3',
+      'playwright@1.62.1'
+    ],
+    { cwd: consumer }
+  );
+  return consumer;
+}
+
 try {
   const candidateArchive = await pack(root, temporaryRoot);
-  const candidate = await measure('candidate', candidateArchive);
+  let candidate;
+  let comparison = {};
+  let failure;
+
+  if (compare) {
+    const baseline = path.join(temporaryRoot, 'gate2-baseline');
+    run('git', [
+      '-c',
+      `safe.directory=${root.replaceAll('\\', '/')}`,
+      'clone',
+      '--quiet',
+      '--no-hardlinks',
+      root,
+      baseline
+    ]);
+    run('git', ['checkout', '--quiet', baselineSha], { cwd: baseline });
+    npm(['ci', '--ignore-scripts'], { cwd: baseline });
+    const baselineArchive = await pack(baseline, temporaryRoot);
+    const measured = await compareConsumers(candidateArchive, baselineArchive);
+    candidate = measured.candidate;
+    const ratio = candidate.medianMs / measured.baseline.medianMs;
+    comparison = { baselineSha, baseline: measured.baseline, ratio };
+    if (ratio > 1.2) {
+      failure = `Candidate benchmark regressed by ${((ratio - 1) * 100).toFixed(2)}%.`;
+    }
+  } else {
+    candidate = await measure('candidate', candidateArchive);
+  }
+
   if (candidate.medianMs >= 10_000) {
-    throw new Error(`Candidate benchmark median exceeded 10 seconds (${candidate.medianMs}ms).`);
+    failure = `Candidate benchmark median exceeded 10 seconds (${candidate.medianMs}ms).`;
   }
 
   const report = {
@@ -87,35 +151,15 @@ try {
     os: `${process.platform}-${process.arch}`,
     node: process.version,
     candidate,
-    ...(compare
-      ? await (async () => {
-          const baseline = path.join(temporaryRoot, 'gate2-baseline');
-          run('git', [
-            '-c',
-            `safe.directory=${root.replaceAll('\\', '/')}`,
-            'clone',
-            '--quiet',
-            '--no-hardlinks',
-            root,
-            baseline
-          ]);
-          run('git', ['checkout', '--quiet', baselineSha], { cwd: baseline });
-          npm(['ci', '--ignore-scripts'], { cwd: baseline });
-          const baselineArchive = await pack(baseline, temporaryRoot);
-          const baselineResult = await measure('baseline', baselineArchive);
-          const ratio = candidate.medianMs / baselineResult.medianMs;
-          if (ratio > 1.2) {
-            throw new Error(`Candidate benchmark regressed by ${((ratio - 1) * 100).toFixed(2)}%.`);
-          }
-          return { baselineSha, baseline: baselineResult, ratio };
-        })()
-      : {}),
-    verdict: 'passed'
+    ...comparison,
+    ...(failure === undefined ? {} : { failure }),
+    verdict: failure === undefined ? 'passed' : 'failed'
   };
   const serialized = `${JSON.stringify(report, null, 2)}\n`;
   const evidencePath = process.env.FLOWTRACT_BENCHMARK_REPORT;
   if (evidencePath !== undefined) await writeFile(evidencePath, serialized, 'utf8');
   process.stdout.write(serialized);
+  if (failure !== undefined) throw new Error(failure);
 } finally {
   await rm(temporaryRoot, { recursive: true, force: true });
 }
