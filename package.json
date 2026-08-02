@@ -39,7 +39,7 @@
     "@typescript-eslint/parser": "^8.65.0",
     "@typescript/native": "npm:typescript@^7.0.2",
     "@vitest/coverage-v8": "^4.1.10",
-    "esbuild": "^0.27.0",
+    "esbuild": "^0.28.1",
     "eslint": "^8.57.0",
     "prettier": "^3.2.4",
     "publint": "^0.3.22",
