@@ -1,0 +1,76 @@
+name: Gate 3 Acceptance
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Full immutable candidate SHA to verify
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  acceptance:
+    name: ${{ matrix.os }} / Node 24 acceptance
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+    steps:
+      - name: Check out exact candidate
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.expected_sha }}
+          fetch-depth: 0
+
+      - name: Verify immutable candidate SHA
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test "${#EXPECTED_SHA}" = 40
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Audit complete dependency graph
+        run: npm audit --audit-level=low
+
+      - name: Select durable report paths
+        shell: bash
+        run: |
+          echo "FLOWTRACT_BENCHMARK_REPORT=$RUNNER_TEMP/flowtract-benchmark.json" >> "$GITHUB_ENV"
+          echo "FLOWTRACT_SOAK_REPORT=$RUNNER_TEMP/flowtract-soak.json" >> "$GITHUB_ENV"
+
+      - name: Compare candidate benchmark with Gate 2
+        run: npm run core:benchmark:compare
+
+      - name: Run fixed 15-minute core soak
+        run: npm run core:soak
+
+      - name: Upload Gate 3 acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gate3-${{ matrix.os }}-${{ inputs.expected_sha }}
+          path: |
+            ${{ env.FLOWTRACT_BENCHMARK_REPORT }}
+            ${{ env.FLOWTRACT_SOAK_REPORT }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Verify repository integrity
+        run: git diff --exit-code

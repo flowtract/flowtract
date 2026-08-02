@@ -42,6 +42,18 @@ migration guidance.
   security, packaging, and root-runtime developer experience.
 - Non-authorizing future design records for deferred Cucumber/CLI work and a
   bounded command-target feasibility candidate.
+- Gate 3 hostile-value inspection and bounded public errors that avoid getters,
+  proxies, `toJSON`, arbitrary coercion, prototype mutation, and unbounded causes.
+- Fixed-seed property proof with 10,000 cases, exhaustive fault injection,
+  400 deterministic lifecycle-race schedules, 1,000 sequential cycles, 64
+  concurrent custom scenarios, and 16 concurrent Playwright CRUD scenarios.
+- Built-package benchmark and fixed 15-minute soak profiles with resource,
+  disposal, secret, result, and forced-GC heap evidence.
+- Executable packed documentation, an error catalog, documentation for every
+  root export, minimum/latest peer consumers, CycloneDX SBOM proof, and a
+  non-publishing 84-file publication rehearsal.
+- Gate 3 QA, macOS/Node 24 CI, supply-chain/peer compatibility CI, and an exact-SHA
+  manual Windows/Ubuntu acceptance workflow.
 
 ### Fixed
 
@@ -55,11 +67,14 @@ migration guidance.
   instances, and classify redirect overflow separately from request timeout.
 - Extend Gate 2 proof for lifecycle races, response disposal, redirects,
   connection failures, repeated headers, declared error statuses, and bounds.
+- Remove the unused Cucumber package coupling and remediate all full-development
+  audit findings by moving to ESLint 10.8.0 and esbuild 0.28.1.
 
 ### Current limitations
 
-- Gate 2 is accepted at `cc30efe`; Gate 3 core hardening remains
-  specification-only and awaits repository-owner approval.
+- Gate 2 is accepted at `cc30efe`; Gate 3 core hardening is implemented on a
+  review candidate but remains pending cross-platform, soak, security, and
+  repository-owner semantic acceptance.
 - Cucumber, CLI, generator, configuration discovery, command execution, and
   artifact behavior are deferred future designs and are not part of the `0.1`
   root-package compatibility promise.

@@ -39,8 +39,10 @@
     "api-docs:check": "node scripts/api-docs-check.mjs",
     "sbom:check": "node scripts/sbom-check.mjs",
     "package:publish-dry-run": "npm run build && npm run package:publish-dry-run --workspace flowtract",
-    "gate2:qa": "node scripts/qa.mjs",
-    "qa": "npm run gate2:qa"
+    "package:publish-dry-run:built": "npm run package:publish-dry-run --workspace flowtract",
+    "gate3:qa": "node scripts/qa.mjs",
+    "gate2:qa": "npm run gate3:qa",
+    "qa": "npm run gate3:qa"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",

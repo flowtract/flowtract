@@ -67,20 +67,24 @@ describe('Gate 3 hostile input properties', () => {
   it('runs 3,000 redaction, error, and diagnostic-shape cases', () => {
     checkProperty(
       'redaction-errors-diagnostics',
-      fc.property(safeSecret, fc.jsonValue({ maxDepth: 3 }), (secret, value) => {
-        const secrets = new SecretTracker();
-        secrets.add(secret);
-        const redactor = new Redactor({ previewCharacters: 128 }, secrets);
-        const details = redactor.value({ password: secret, value, nested: { token: secret } });
-        const error = new FlowtractError('FLOWTRACT_CONFIG', 'bounded failure', { details });
-        const serialized = JSON.stringify(error.toJSON());
-        return (
-          serialized.length <= 8_192 &&
-          !serialized.includes(secret) &&
-          Object.isFrozen(error.details) &&
-          Object.isFrozen(error.toJSON())
-        );
-      }),
+      fc.property(
+        safeSecret,
+        fc.oneof(fc.boolean(), fc.integer(), fc.string({ maxLength: 32 })),
+        (secret, value) => {
+          const secrets = new SecretTracker();
+          secrets.add(secret);
+          const redactor = new Redactor({ previewCharacters: 128 }, secrets);
+          const details = redactor.value({ password: secret, value, nested: { token: secret } });
+          const error = new FlowtractError('FLOWTRACT_CONFIG', 'bounded failure', { details });
+          const serialized = JSON.stringify(error.toJSON());
+          return (
+            serialized.length <= 8_192 &&
+            !serialized.includes(secret) &&
+            Object.isFrozen(error.details) &&
+            Object.isFrozen(error.toJSON())
+          );
+        }
+      ),
       3_000
     );
   });

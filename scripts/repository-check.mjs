@@ -13,6 +13,7 @@ const requiredPaths = [
   'CODE_OF_CONDUCT.md',
   'DEVELOPERS_CERTIFICATE_OF_ORIGIN.txt',
   'docs/open-source/v0.1/README.md',
+  '.github/workflows/gate3-acceptance.yml',
   'packages/flowtract/package.json',
   'packages/create-flowtract/package.json'
 ];
@@ -51,6 +52,8 @@ const expectedScripts = [
   'api-docs:check',
   'sbom:check',
   'package:publish-dry-run',
+  'package:publish-dry-run:built',
+  'gate3:qa',
   'gate2:qa',
   'qa'
 ];
@@ -166,6 +169,21 @@ const generatedEvidence = (await collectFiles(root))
   .filter(path => /(^|\/)(?:sbom|bom)(?:[.-].*)?\.(?:json|xml)$/iu.test(path));
 if (generatedEvidence.length > 0) {
   throw new Error(`Generated SBOM evidence must remain untracked: ${generatedEvidence.join(', ')}`);
+}
+
+const acceptanceWorkflow = await readFile(
+  join(root, '.github/workflows/gate3-acceptance.yml'),
+  'utf8'
+);
+for (const required of [
+  'expected_sha:',
+  'npm run core:benchmark:compare',
+  'npm run core:soak',
+  '043fb46d1a93c77aae656e7c1c64a875d1fc6a0a'
+]) {
+  if (!acceptanceWorkflow.includes(required)) {
+    throw new Error(`Gate 3 acceptance workflow is missing: ${required}`);
+  }
 }
 
 console.log(

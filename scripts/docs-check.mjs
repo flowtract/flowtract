@@ -23,7 +23,7 @@ function npm(arguments_, options = {}) {
 }
 
 try {
-  npm(['run', 'build']);
+  if (process.env.FLOWTRACT_SKIP_BUILD !== '1') npm(['run', 'build']);
   const packOutput = npm(['pack', '--json', '--pack-destination', temporaryRoot], {
     cwd: packageRoot,
     capture: true
