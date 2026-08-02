@@ -50,9 +50,9 @@ await runChecks([
   'type-check',
   'repository:check',
   'secret:check',
-  'api-docs:check'
+  'api-docs:check',
+  'coverage'
 ]);
-await runChecks(['coverage']);
 const runtimeDurationMs = Date.now() - runtimeStartedAt;
 if (runtimeDurationMs >= 60_000) {
   throw new Error(`Flowtract Gate 3 runtime proof exceeded 60 seconds (${runtimeDurationMs}ms).`);
