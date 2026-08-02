@@ -53,7 +53,7 @@ migration guidance.
 
 ### Current limitations
 
-- Gate 2 is implemented and locally proof-gated; pull-request review and the
-  required Windows/Ubuntu Node 22/24 CI matrix remain acceptance prerequisites.
+- Gate 2 is accepted at `cc30efe`; Gate 3 Cucumber, CLI, generator,
+  configuration discovery, and artifact behavior remain specification-only.
 - The legacy prototype is retained privately as historical behavioral evidence.
 - No npm package or production-ready release exists.

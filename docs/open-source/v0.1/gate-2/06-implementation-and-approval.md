@@ -197,14 +197,19 @@ belong to the later approved implementation turn.
 
 Gate 2 implementation completion will be recorded here after merge:
 
-| Field                 | Value       |
-| --------------------- | ----------- |
-| Implementation status | Not started |
-| Accepted revision     | —           |
-| Acceptance PR         | —           |
-| Approval/merge date   | —           |
-| Cross-platform proof  | —           |
-| Coverage              | —           |
+| Field                 | Value                                                                                 |
+| --------------------- | ------------------------------------------------------------------------------------- |
+| Implementation status | Accepted                                                                              |
+| Accepted revision     | `cc30efec286c595d185644096fe8a17c0771591d`                                            |
+| Acceptance PR         | [#9](https://github.com/flowtract/flowtract/pull/9)                                   |
+| Approval/merge date   | 2026-08-02                                                                            |
+| Cross-platform proof  | [CI 30739802193](https://github.com/flowtract/flowtract/actions/runs/30739802193)     |
+| Security proof        | [CodeQL 30739802203](https://github.com/flowtract/flowtract/actions/runs/30739802203) |
+| Coverage              | 93.67% statements, 95.71% lines, 94.73% functions, 87.76% branches                    |
+
+The accepted candidate passed 94 tests, the 80-file installed-package proof,
+TypeScript 5.5.4/6.0.2/7.0.2 consumers, DCO, Dependency Review, secret scan,
+zero production vulnerabilities, and zero branch-specific open CodeQL alerts.
 
 ## Specification approval
 

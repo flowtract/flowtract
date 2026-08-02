@@ -1,6 +1,6 @@
 # Flowtract Open-Source v0.1 Canonical Specification
 
-> **Status:** Gate 2 implemented locally; acceptance pending CI and review
+> **Status:** Gate 2 accepted; Gate 3 specification in progress
 > **Product:** Flowtract
 > **Release target:** `0.1.0` developer preview
 > **Positioning:** Test contracts in motion.
@@ -43,6 +43,7 @@ hosted services, or a low-code interface.
 9. [Gate 0 review and approval](09-gate-0-review-and-approval.md)
 10. [Gate 1.5 clean repository extraction](10-gate-1-5-clean-repository.md)
 11. [Gate 2 execution foundation](gate-2/README.md)
+12. [Gate 3 Cucumber and CLI](gate-3/README.md)
 
 ## Normative language
 
@@ -75,6 +76,8 @@ repository-transfer assumption with a reviewed clean extraction and completed
 public activation at `090ec2e`. The Gate 2 specification was approved for
 implementation on 2026-07-29 against signed revision `269b787` (the
 tree-identical DCO rewrite of `ca990a9`), including the close-scoped
-cleanup-client amendment. The implementation is locally
-proof-gated; pull-request review and the Windows/Ubuntu Node 22/24 matrix remain
-acceptance prerequisites. npm publication remains separately gated.
+cleanup-client amendment. Gate 2 was accepted through PR
+[#9](https://github.com/flowtract/flowtract/pull/9) and squash-merged as
+`cc30efe` on 2026-08-02 after semantic review and the Windows/Ubuntu Node 22/24
+matrix passed. Gate 3 remains specification-only until its owner approval. npm
+publication remains separately gated.
