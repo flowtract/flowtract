@@ -149,13 +149,18 @@ The repository owner must confirm:
 - deferred Cucumber/CLI and command-target boundaries;
 - all explicit non-goals.
 
-| Field             | Value                                |
-| ----------------- | ------------------------------------ |
-| Decision          | Pending                              |
-| Approved by       | Pending                              |
-| Approval date     | Pending                              |
-| Approved revision | Pending                              |
-| Authorization     | Root-core Gate 3 implementation only |
+| Field             | Value                                      |
+| ----------------- | ------------------------------------------ |
+| Decision          | Approved                                   |
+| Approved by       | Repository owner                           |
+| Approval date     | 2026-08-02                                 |
+| Approved revision | `2f9a50ca714916e91eb4e4b2266aa28c01da99e3` |
+| Authorization     | Root-core Gate 3 implementation only       |
+
+Semantic review corrected the development-audit inventory, locked the ESLint
+and esbuild remediation targets, made private-package publication rehearsal
+executable without publishing, and replaced a platform-sensitive heap trend
+rule with a bounded forced-GC comparison before approval.
 
 After approval, prepare a decision-preserving implementation plan against the
 approved SHA. Any required deviation stops work until an amended revision is
