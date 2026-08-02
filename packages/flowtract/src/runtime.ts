@@ -9,6 +9,7 @@ import type {
 } from './runtime-types.js';
 import { safeDataProperty } from './internal/safe-inspection.js';
 
+/** Creates an immutable, reusable runtime whose mutable execution state is scenario-local. */
 export function createFlowtract(config: FlowtractConfig): FlowtractRuntime {
   const normalized = normalizeConfig(config);
   return Object.freeze({

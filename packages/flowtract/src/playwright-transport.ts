@@ -31,6 +31,7 @@ function classify(
   return 'unknown';
 }
 
+/** Creates the default isolated Playwright HTTP transport with secure TLS verification. */
 export function playwrightTransport(): HttpTransport {
   return {
     async createSession(options) {

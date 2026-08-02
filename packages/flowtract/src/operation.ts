@@ -141,6 +141,7 @@ function validateResponses(
   return Object.freeze(cloned);
 }
 
+/** Validates and freezes a schema-derived REST operation while preserving exact object identity. */
 export function defineOperation<const Input extends OperationDefinitionInput>(
   definition: Input & ResponseKeyConstraint<Input>
 ): OperationDefinition<Input> {

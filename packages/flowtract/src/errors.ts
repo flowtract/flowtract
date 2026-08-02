@@ -1,3 +1,4 @@
+/** Stable public error codes for configuration, execution, authentication, and cleanup failures. */
 export const FLOWTRACT_ERROR_CODES = [
   'FLOWTRACT_CONFIG',
   'FLOWTRACT_DUPLICATE_OPERATION',
@@ -11,46 +12,55 @@ export const FLOWTRACT_ERROR_CODES = [
   'FLOWTRACT_CLEANUP'
 ] as const;
 
+/** Union of the stable Flowtract error-code strings. */
 export type FlowtractErrorCode = (typeof FLOWTRACT_ERROR_CODES)[number];
 
+/** A JSON-safe contract issue with a structural path and stable validator code. */
 export interface ContractIssue {
   readonly path: readonly (string | number)[];
   readonly message: string;
   readonly code: string;
 }
 
+/** Details attached to `FLOWTRACT_CONFIG` failures. */
 export interface ConfigErrorDetails {
   readonly path?: string;
   readonly issues?: readonly string[];
 }
 
+/** Details attached when an operation identifier is registered more than once. */
 export interface DuplicateOperationErrorDetails {
   readonly operationId: string;
   readonly firstIndex: number;
   readonly duplicateIndex: number;
 }
 
+/** Details attached to request input, schema, or normalization failures. */
 export interface RequestContractErrorDetails {
   readonly section: 'headers' | 'query' | 'pathParams' | 'body' | 'input';
   readonly issues: readonly ContractIssue[];
 }
 
+/** Classification attached to transport creation or execution failures. */
 export interface TransportErrorDetails {
   readonly kind: 'timeout' | 'abort' | 'network' | 'tls' | 'unknown';
 }
 
+/** Details attached when no exact or default response contract exists. */
 export interface UndeclaredStatusErrorDetails {
   readonly status: number;
   readonly declaredStatuses: readonly number[];
   readonly hasDefault: boolean;
 }
 
+/** Bounded response-decoding details that never include an unbounded body. */
 export interface ResponseParseErrorDetails {
   readonly status: number;
   readonly contentType?: string;
   readonly preview?: string;
 }
 
+/** Details attached to response header or body schema failures. */
 export interface ResponseContractErrorDetails {
   readonly status: number;
   readonly contractStatus: number | 'default';
@@ -58,31 +68,37 @@ export interface ResponseContractErrorDetails {
   readonly issues: readonly ContractIssue[];
 }
 
+/** Authentication profile and lifecycle phase for `FLOWTRACT_AUTH`. */
 export interface AuthErrorDetails {
   readonly profile?: string;
   readonly phase: 'create' | 'setup' | 'apply' | 'dispose';
 }
 
+/** State reference and stable reason for interpolation failures. */
 export interface InterpolationErrorDetails {
   readonly reference?: string;
   readonly reason: 'missing' | 'cycle' | 'invalid';
 }
 
+/** One redacted cleanup or disposal failure retained during best-effort close. */
 export interface CleanupFailure {
   readonly label: string;
   readonly message: string;
 }
 
+/** Ordered aggregate of every cleanup and disposal failure. */
 export interface CleanupErrorDetails {
   readonly failures: readonly CleanupFailure[];
 }
 
+/** Optional operation, bounded details, and non-serialized cause for a Flowtract error. */
 export interface FlowtractErrorOptions<Details> {
   readonly operationId?: string;
   readonly details?: Details;
   readonly cause?: unknown;
 }
 
+/** Stable JSON representation; causes and stacks are intentionally omitted. */
 export interface FlowtractErrorJson<Code extends FlowtractErrorCode, Details> {
   readonly code: Code;
   readonly message: string;
@@ -90,6 +106,7 @@ export interface FlowtractErrorJson<Code extends FlowtractErrorCode, Details> {
   readonly details?: Details;
 }
 
+/** Base class for bounded, code-stable Flowtract failures. */
 export class FlowtractError<
   Code extends FlowtractErrorCode = FlowtractErrorCode,
   Details = unknown
@@ -125,12 +142,14 @@ export class FlowtractError<
 
 type ConcreteErrorOptions<Details> = FlowtractErrorOptions<Details>;
 
+/** Synchronous configuration-validation failure. */
 export class ConfigError extends FlowtractError<'FLOWTRACT_CONFIG', ConfigErrorDetails> {
   constructor(message: string, options: ConcreteErrorOptions<ConfigErrorDetails> = {}) {
     super('FLOWTRACT_CONFIG', message, options);
   }
 }
 
+/** Duplicate operation-registration failure. */
 export class DuplicateOperationError extends FlowtractError<
   'FLOWTRACT_DUPLICATE_OPERATION',
   DuplicateOperationErrorDetails
@@ -140,6 +159,7 @@ export class DuplicateOperationError extends FlowtractError<
   }
 }
 
+/** Request declaration, validation, or normalization failure. */
 export class RequestContractError extends FlowtractError<
   'FLOWTRACT_REQUEST_CONTRACT',
   RequestContractErrorDetails
@@ -149,12 +169,14 @@ export class RequestContractError extends FlowtractError<
   }
 }
 
+/** Transport creation, timeout, abort, TLS, network, or unknown execution failure. */
 export class TransportError extends FlowtractError<'FLOWTRACT_TRANSPORT', TransportErrorDetails> {
   constructor(message: string, options: ConcreteErrorOptions<TransportErrorDetails> = {}) {
     super('FLOWTRACT_TRANSPORT', message, options);
   }
 }
 
+/** Response status without an exact or default contract. */
 export class UndeclaredStatusError extends FlowtractError<
   'FLOWTRACT_UNDECLARED_STATUS',
   UndeclaredStatusErrorDetails
@@ -164,6 +186,7 @@ export class UndeclaredStatusError extends FlowtractError<
   }
 }
 
+/** Bounded response decoding or media-type failure. */
 export class ResponseParseError extends FlowtractError<
   'FLOWTRACT_RESPONSE_PARSE',
   ResponseParseErrorDetails
@@ -173,6 +196,7 @@ export class ResponseParseError extends FlowtractError<
   }
 }
 
+/** Response header or body contract-validation failure. */
 export class ResponseContractError extends FlowtractError<
   'FLOWTRACT_RESPONSE_CONTRACT',
   ResponseContractErrorDetails
@@ -182,12 +206,14 @@ export class ResponseContractError extends FlowtractError<
   }
 }
 
+/** Authentication create, setup, apply, or dispose failure. */
 export class AuthError extends FlowtractError<'FLOWTRACT_AUTH', AuthErrorDetails> {
   constructor(message: string, options: ConcreteErrorOptions<AuthErrorDetails> = {}) {
     super('FLOWTRACT_AUTH', message, options);
   }
 }
 
+/** Missing, cyclic, malformed, or out-of-bounds state interpolation. */
 export class InterpolationError extends FlowtractError<
   'FLOWTRACT_INTERPOLATION',
   InterpolationErrorDetails
@@ -197,16 +223,19 @@ export class InterpolationError extends FlowtractError<
   }
 }
 
+/** Aggregate raised after all cleanup, auth disposal, and transport disposal attempts finish. */
 export class CleanupError extends FlowtractError<'FLOWTRACT_CLEANUP', CleanupErrorDetails> {
   constructor(message: string, options: ConcreteErrorOptions<CleanupErrorDetails> = {}) {
     super('FLOWTRACT_CLEANUP', message, options);
   }
 }
 
+/** A primary `Error` carrying non-enumerable cleanup evidence from scenario close. */
 export type ErrorWithCleanup = Error & {
   readonly cleanupError: CleanupError;
 };
 
+/** Safely tests whether an unknown error carries a Flowtract {@link CleanupError}. */
 export function hasCleanupError(error: unknown): error is ErrorWithCleanup {
   if (!safeIsError(error)) return false;
   const cleanupError = safeOwnData(error, 'cleanupError');

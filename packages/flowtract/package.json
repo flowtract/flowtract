@@ -44,6 +44,8 @@
     "clean": "rimraf dist",
     "build": "npm run clean && tsc -p tsconfig.build.json && node scripts/build.mjs",
     "package:check": "node scripts/package-check.mjs",
+    "peer-matrix": "node scripts/peer-matrix.mjs",
+    "package:publish-dry-run": "node scripts/publish-dry-run.mjs",
     "type-matrix": "node scripts/type-matrix.mjs"
   },
   "peerDependencies": {

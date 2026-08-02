@@ -26,6 +26,7 @@
     "build": "npm run build --workspace flowtract",
     "package:check": "npm run package:check --workspace flowtract",
     "type-matrix": "npm run type-matrix --workspace flowtract",
+    "peer-matrix": "npm run peer-matrix --workspace flowtract",
     "repository:check": "node scripts/repository-check.mjs",
     "secret:check": "node scripts/secret-scan.mjs",
     "clean-clone:check": "node scripts/clean-clone-check.mjs",
@@ -34,6 +35,10 @@
     "core:benchmark:compare": "node scripts/core-benchmark.mjs --compare",
     "core:soak:smoke": "node scripts/core-soak.mjs --smoke",
     "core:soak": "node scripts/core-soak.mjs",
+    "docs:check": "node scripts/docs-check.mjs",
+    "api-docs:check": "node scripts/api-docs-check.mjs",
+    "sbom:check": "node scripts/sbom-check.mjs",
+    "package:publish-dry-run": "npm run build && npm run package:publish-dry-run --workspace flowtract",
     "gate2:qa": "node scripts/qa.mjs",
     "qa": "npm run gate2:qa"
   },

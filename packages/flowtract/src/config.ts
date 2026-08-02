@@ -133,6 +133,7 @@ function snapshotRedaction(config: RedactionConfig | undefined): RedactionConfig
   });
 }
 
+/** Validates, copies, and freezes Flowtract-owned configuration containers synchronously. */
 export function defineConfig<const Config extends FlowtractConfig>(
   config: Config
 ): Readonly<Config> {

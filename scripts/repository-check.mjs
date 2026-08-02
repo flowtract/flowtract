@@ -38,6 +38,7 @@ const expectedScripts = [
   'build',
   'package:check',
   'type-matrix',
+  'peer-matrix',
   'repository:check',
   'secret:check',
   'clean-clone:check',
@@ -46,6 +47,10 @@ const expectedScripts = [
   'core:benchmark:compare',
   'core:soak:smoke',
   'core:soak',
+  'docs:check',
+  'api-docs:check',
+  'sbom:check',
+  'package:publish-dry-run',
   'gate2:qa',
   'qa'
 ];

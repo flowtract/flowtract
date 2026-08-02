@@ -33,7 +33,9 @@ export async function createConsumer(directory, files) {
   );
 }
 
-export function installConsumer(directory, tarball, typescriptVersion) {
+export function installConsumer(directory, tarball, versions) {
+  const options =
+    typeof versions === 'string' || versions === undefined ? { typescript: versions } : versions;
   const dependencies = [
     'install',
     '--ignore-scripts',
@@ -41,11 +43,11 @@ export function installConsumer(directory, tarball, typescriptVersion) {
     '--no-fund',
     '--no-package-lock',
     tarball,
-    'zod@4.4.3',
-    'playwright@1.62.0'
+    `zod@${options.zod ?? '4.4.3'}`,
+    `playwright@${options.playwright ?? '1.62.1'}`
   ];
-  if (typescriptVersion !== undefined) {
-    dependencies.push(`typescript@${typescriptVersion}`);
+  if (options.typescript !== undefined) {
+    dependencies.push(`typescript@${options.typescript}`);
   }
   runNpm(dependencies, { cwd: directory });
 }

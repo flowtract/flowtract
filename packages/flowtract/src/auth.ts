@@ -31,6 +31,7 @@ async function resolve(
   return nonEmpty(value, name);
 }
 
+/** Creates a bearer-token provider whose token may be resolved from scenario state. */
 export function bearerToken(options: { readonly token: StringSource }): AuthProvider {
   return {
     create: () => ({
@@ -43,6 +44,7 @@ export function bearerToken(options: { readonly token: StringSource }): AuthProv
   };
 }
 
+/** Creates a collision-enforcing header or query API-key provider. */
 export function apiKey(options: {
   readonly value: StringSource;
   readonly in: 'header' | 'query';
@@ -61,6 +63,7 @@ export function apiKey(options: {
   };
 }
 
+/** Creates an RFC 7617 Basic authorization provider and tracks source and encoded secrets. */
 export function basicAuth(options: {
   readonly username: StringSource;
   readonly password: StringSource;
@@ -80,6 +83,7 @@ export function basicAuth(options: {
   };
 }
 
+/** Creates a cookie-preserving login provider with project-owned extraction and optional CSRF. */
 export function sessionAuth<const Login extends OperationDefinition>(
   options: SessionAuthOptions<Login>
 ): AuthProvider {
