@@ -99,10 +99,14 @@ export class FlowtractError<
   readonly details: Details | undefined;
 
   constructor(code: Code, message: string, options: FlowtractErrorOptions<Details> = {}) {
-    super(message, options.cause === undefined ? undefined : { cause: options.cause });
+    const cause = safeOwnData(options, 'cause');
+    super(message, cause === undefined ? undefined : { cause });
     this.code = code;
-    this.operationId = options.operationId;
-    this.details = options.details;
+    const operationId = safeOwnData(options, 'operationId');
+    this.operationId = typeof operationId === 'string' ? operationId : undefined;
+    const details = safeOwnData(options, 'details');
+    this.details =
+      details === undefined ? undefined : (safeSnapshot(details) as Details | undefined);
     Object.defineProperty(this, 'name', {
       configurable: true,
       value: new.target.name
@@ -110,12 +114,12 @@ export class FlowtractError<
   }
 
   toJSON(): FlowtractErrorJson<Code, Details> {
-    return {
-      code: this.code,
-      message: this.message,
-      ...(this.operationId === undefined ? {} : { operationId: this.operationId }),
-      ...(this.details === undefined ? {} : { details: this.details })
-    };
+    const output: Record<string, unknown> = {};
+    defineSafeData(output, 'code', this.code);
+    defineSafeData(output, 'message', this.message);
+    if (this.operationId !== undefined) defineSafeData(output, 'operationId', this.operationId);
+    if (this.details !== undefined) defineSafeData(output, 'details', safeSnapshot(this.details));
+    return Object.freeze(output) as unknown as FlowtractErrorJson<Code, Details>;
   }
 }
 
@@ -204,9 +208,13 @@ export type ErrorWithCleanup = Error & {
 };
 
 export function hasCleanupError(error: unknown): error is ErrorWithCleanup {
-  return (
-    error instanceof Error &&
-    'cleanupError' in error &&
-    (error as Partial<ErrorWithCleanup>).cleanupError instanceof CleanupError
-  );
+  if (!safeIsError(error)) return false;
+  const cleanupError = safeOwnData(error, 'cleanupError');
+  return cleanupError instanceof CleanupError;
 }
+import {
+  defineSafeData,
+  safeIsError,
+  safeOwnData,
+  safeSnapshot
+} from './internal/safe-inspection.js';

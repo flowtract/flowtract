@@ -1,5 +1,6 @@
 import { InterpolationError } from '../errors.js';
 import type { AuthStateAccess, MutableAuthRequest } from '../runtime-types.js';
+import { safeOwnEntries, safePrimitiveText } from './safe-inspection.js';
 
 export const authSecretRegistrar = Symbol('flowtract.authSecretRegistrar');
 
@@ -27,25 +28,30 @@ export class SecretTracker {
   add(value: unknown): void {
     const seen = new WeakSet<object>();
     const visit = (candidate: unknown): void => {
+      const primitive = safePrimitiveText(candidate);
       if (
         typeof candidate === 'string' ||
         typeof candidate === 'number' ||
         typeof candidate === 'boolean' ||
         typeof candidate === 'bigint'
       ) {
-        const text = String(candidate);
+        const text = primitive ?? '';
         if (text.length > 0) this.#strings.add(text);
         return;
       }
       if (candidate === null || typeof candidate !== 'object' || seen.has(candidate)) return;
       seen.add(candidate);
-      if (Array.isArray(candidate)) {
-        candidate.forEach(visit);
+      const inspected = safeOwnEntries(candidate);
+      if (
+        !inspected.ok ||
+        (!Array.isArray(candidate) &&
+          inspected.prototype !== Object.prototype &&
+          inspected.prototype !== null)
+      ) {
         return;
       }
-      if (Object.getPrototypeOf(candidate) !== Object.prototype) return;
-      for (const descriptor of Object.values(Object.getOwnPropertyDescriptors(candidate))) {
-        if ('value' in descriptor) visit(descriptor.value);
+      for (const entry of inspected.entries) {
+        if (entry.enumerable && entry.kind === 'data') visit(entry.value);
       }
     };
     visit(value);

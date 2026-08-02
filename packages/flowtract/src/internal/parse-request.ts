@@ -10,9 +10,39 @@ import type {
   ParsedOperationInput
 } from '../operation-types.js';
 import type { Redactor } from './redaction.js';
+import { defineSafeData, safeOwnEntries, safeOwnData } from './safe-inspection.js';
 
 const REQUEST_SECTIONS = ['headers', 'query', 'pathParams', 'body'] as const;
 type RequestSection = (typeof REQUEST_SECTIONS)[number];
+
+function ownedInput(
+  operation: OperationDefinition,
+  input: unknown
+): Readonly<Record<string, unknown>> {
+  if (input === undefined) return {};
+  if (typeof input !== 'object' || input === null || Array.isArray(input)) {
+    requestError(operation.id, 'input', 'Request input must be an object.', [
+      { path: [], message: 'Expected a request input object.', code: 'invalid_input' }
+    ]);
+  }
+  const inspected = safeOwnEntries(input);
+  if (!inspected.ok || (inspected.prototype !== Object.prototype && inspected.prototype !== null)) {
+    requestError(operation.id, 'input', 'Request input must be a plain data object.', [
+      { path: [], message: 'Expected a plain request input object.', code: 'invalid_input' }
+    ]);
+  }
+  const output: Record<string, unknown> = {};
+  for (const entry of inspected.entries) {
+    if (!entry.enumerable) continue;
+    if (entry.kind !== 'data') {
+      requestError(operation.id, 'input', 'Request input must contain data properties only.', [
+        { path: [entry.key], message: 'Accessors are unsupported.', code: 'invalid_input' }
+      ]);
+    }
+    defineSafeData(output, entry.key, entry.value);
+  }
+  return output;
+}
 
 function normalizeIssues(
   issues: readonly z.ZodIssue[],
@@ -44,20 +74,7 @@ export function parseOperationInput<Operation extends OperationDefinition>(
   redactor?: Redactor,
   taintedSections: ReadonlySet<string> = new Set()
 ): ParsedOperationInput<Operation> {
-  if (
-    input !== undefined &&
-    (typeof input !== 'object' || input === null || Array.isArray(input))
-  ) {
-    requestError(operation.id, 'input', 'Request input must be an object.', [
-      {
-        path: [],
-        message: 'Expected a request input object.',
-        code: 'invalid_input'
-      }
-    ]);
-  }
-
-  const rawInput: Readonly<Record<string, unknown>> = input === undefined ? {} : input;
+  const rawInput = ownedInput(operation, input);
   const request = operation.request;
   const declaredSections = new Set(
     REQUEST_SECTIONS.filter(section => request?.[section] !== undefined)
@@ -82,7 +99,7 @@ export function parseOperationInput<Operation extends OperationDefinition>(
       continue;
     }
 
-    const result = schema.safeParse(rawInput[section]);
+    const result = schema.safeParse(safeOwnData(rawInput, section));
     if (!result.success) {
       requestError(
         operation.id,
@@ -91,7 +108,7 @@ export function parseOperationInput<Operation extends OperationDefinition>(
         normalizeIssues(result.error.issues, redactor, taintedSections.has(section))
       );
     }
-    parsed[section] = result.data;
+    defineSafeData(parsed, section, result.data);
   }
 
   return parsed as ParsedOperationInput<Operation>;
@@ -101,16 +118,7 @@ export function validateOperationInputShape(
   operation: OperationDefinition,
   input: unknown
 ): Readonly<Record<string, unknown>> {
-  if (
-    input !== undefined &&
-    (typeof input !== 'object' || input === null || Array.isArray(input))
-  ) {
-    requestError(operation.id, 'input', 'Request input must be an object.', [
-      { path: [], message: 'Expected a request input object.', code: 'invalid_input' }
-    ]);
-  }
-  const raw: Readonly<Record<string, unknown>> =
-    input === undefined ? {} : (input as Readonly<Record<string, unknown>>);
+  const raw = ownedInput(operation, input);
   const request = operation.request;
   for (const key of Object.keys(raw)) {
     if (

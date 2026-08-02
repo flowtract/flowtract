@@ -3,6 +3,13 @@ import { OperationRegistry } from './internal/operation-registry.js';
 import { Redactor } from './internal/redaction.js';
 import { SecretTracker } from './internal/state.js';
 import { playwrightTransport } from './playwright-transport.js';
+import {
+  defineSafeData,
+  safeArrayValues,
+  safeDataProperty,
+  safeOwnEntries,
+  safeOwnData
+} from './internal/safe-inspection.js';
 import type { OperationDefinition } from './operation-types.js';
 import type {
   AuthProvider,
@@ -65,7 +72,7 @@ function validateAuth(
     if (
       provider === null ||
       typeof provider !== 'object' ||
-      typeof provider.create !== 'function'
+      typeof safeDataProperty(provider, 'create') !== 'function'
     ) {
       fail(`auth.${profile}`, `Auth profile "${profile}" must implement create().`);
     }
@@ -77,17 +84,28 @@ function validateAuth(
     )
   ];
   for (const profile of references) {
-    if (!(profile in auth)) fail('auth', `Unknown auth profile "${profile}".`);
+    if (!Object.hasOwn(auth, profile)) fail('auth', `Unknown auth profile "${profile}".`);
   }
 }
 
 function snapshotRedaction(config: RedactionConfig | undefined): RedactionConfig | undefined {
   if (config === undefined) return undefined;
+  const rawHeaders = safeOwnData(config, 'headers');
+  const rawPaths = safeOwnData(config, 'jsonPaths');
+  const previewCharacters = safeOwnData(config, 'previewCharacters');
+  const headerValues = rawHeaders === undefined ? undefined : safeArrayValues(rawHeaders);
+  const pathValues = rawPaths === undefined ? undefined : safeArrayValues(rawPaths);
+  if (rawHeaders !== undefined && headerValues === undefined) {
+    fail('redaction.headers', 'Redaction headers must be an array.');
+  }
+  if (rawPaths !== undefined && pathValues === undefined) {
+    fail('redaction.jsonPaths', 'Redaction JSON paths must be an array.');
+  }
   const headers =
-    config.headers === undefined
+    headerValues === undefined
       ? undefined
       : Object.freeze(
-          config.headers.map((header, index) => {
+          headerValues.map((header, index) => {
             if (typeof header !== 'string' || header.trim().length === 0) {
               fail(
                 `redaction.headers.${index}`,
@@ -98,10 +116,10 @@ function snapshotRedaction(config: RedactionConfig | undefined): RedactionConfig
           })
         );
   const jsonPaths =
-    config.jsonPaths === undefined
+    pathValues === undefined
       ? undefined
       : Object.freeze(
-          config.jsonPaths.map((path, index) => {
+          pathValues.map((path, index) => {
             if (typeof path !== 'string') {
               fail(`redaction.jsonPaths.${index}`, 'Redaction JSON paths must be strings.');
             }
@@ -111,47 +129,73 @@ function snapshotRedaction(config: RedactionConfig | undefined): RedactionConfig
   return Object.freeze({
     ...(headers === undefined ? {} : { headers }),
     ...(jsonPaths === undefined ? {} : { jsonPaths }),
-    ...(config.previewCharacters === undefined
-      ? {}
-      : { previewCharacters: config.previewCharacters })
+    ...(previewCharacters === undefined ? {} : { previewCharacters: previewCharacters as number })
   });
 }
 
 export function defineConfig<const Config extends FlowtractConfig>(
   config: Config
 ): Readonly<Config> {
-  normalizeConfig(config);
-  const redaction = snapshotRedaction(config.redaction);
-  return Object.freeze({
-    ...config,
-    operations: Object.freeze([...config.operations]),
-    ...(config.auth === undefined ? {} : { auth: Object.freeze({ ...config.auth }) }),
-    ...(redaction === undefined ? {} : { redaction })
-  }) as Readonly<Config>;
+  const normalized = normalizeConfig(config);
+  const inspected = safeOwnEntries(config);
+  if (!inspected.ok) fail('config', 'Configuration must contain data properties only.');
+  const output: Record<string, unknown> = {};
+  for (const entry of inspected.entries) {
+    if (!entry.enumerable || entry.kind !== 'data') continue;
+    defineSafeData(output, entry.key, entry.value);
+  }
+  defineSafeData(output, 'baseURL', normalized.baseURL);
+  defineSafeData(output, 'operations', normalized.operations);
+  if (safeOwnData(config, 'auth') !== undefined) defineSafeData(output, 'auth', normalized.auth);
+  if (normalized.redaction !== undefined) defineSafeData(output, 'redaction', normalized.redaction);
+  return Object.freeze(output) as Readonly<Config>;
 }
 
 export function normalizeConfig(config: FlowtractConfig): NormalizedConfig {
-  if (config === null || typeof config !== 'object')
+  if (config === null || typeof config !== 'object' || !safeOwnEntries(config).ok)
     fail('config', 'Configuration must be an object.');
-  if (!Array.isArray(config.operations) || config.operations.length === 0) {
+  const operationValues = safeArrayValues(safeOwnData(config, 'operations'));
+  if (operationValues === undefined || operationValues.length === 0) {
     fail('operations', 'At least one operation is required.');
   }
-  const operations = Object.freeze([...config.operations]);
+  const operations = Object.freeze([...operationValues]) as readonly OperationDefinition[];
   const registry = new OperationRegistry(operations);
-  const auth = Object.freeze({ ...(config.auth ?? {}) });
-  const defaultAuth = config.defaultAuth ?? false;
+  const rawAuth = safeOwnData(config, 'auth');
+  const inspectedAuth = rawAuth === undefined ? undefined : safeOwnEntries(rawAuth);
+  if (
+    inspectedAuth !== undefined &&
+    (!inspectedAuth.ok ||
+      (inspectedAuth.prototype !== Object.prototype && inspectedAuth.prototype !== null))
+  ) {
+    fail('auth', 'Authentication profiles must be a plain object.');
+  }
+  const authOutput: Record<string, AuthProvider> = {};
+  for (const entry of inspectedAuth?.entries ?? []) {
+    if (!entry.enumerable) continue;
+    if (entry.kind !== 'data') fail(`auth.${entry.key}`, 'Auth profiles must be data properties.');
+    defineSafeData(authOutput, entry.key, entry.value);
+  }
+  const auth = Object.freeze(authOutput);
+  const defaultAuth = (safeOwnData(config, 'defaultAuth') ?? false) as string | false;
   validateAuth(operations, auth, defaultAuth);
-  const timeoutMs = positiveTimeout(config.timeoutMs, 'timeoutMs', 30_000);
-  const allowInsecureTls = config.allowInsecureTls ?? false;
+  const timeoutMs = positiveTimeout(
+    safeOwnData(config, 'timeoutMs') as number | undefined,
+    'timeoutMs',
+    30_000
+  );
+  const allowInsecureTls = safeOwnData(config, 'allowInsecureTls') ?? false;
   if (typeof allowInsecureTls !== 'boolean')
     fail('allowInsecureTls', 'allowInsecureTls must be boolean.');
-  const redaction = snapshotRedaction(config.redaction);
+  const redaction = snapshotRedaction(
+    safeOwnData(config, 'redaction') as RedactionConfig | undefined
+  );
   new Redactor(redaction, new SecretTracker());
   return Object.freeze({
-    baseURL: normalizeBaseURL(config.baseURL),
+    baseURL: normalizeBaseURL(safeOwnData(config, 'baseURL') as string),
     operations,
     registry,
-    transport: config.transport ?? playwrightTransport(),
+    transport:
+      (safeOwnData(config, 'transport') as HttpTransport | undefined) ?? playwrightTransport(),
     auth,
     defaultAuth,
     timeoutMs,

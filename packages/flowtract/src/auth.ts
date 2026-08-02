@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer';
 import { AuthError } from './errors.js';
 import { registerAuthSecret } from './internal/state.js';
+import { safeOwnData, safePrimitiveText } from './internal/safe-inspection.js';
 import type { OperationDefinition, OperationInput, OperationResult } from './operation-types.js';
 import type {
   AuthApplyContext,
@@ -25,7 +26,9 @@ async function resolve(
   state: AuthStateAccess,
   name: string
 ): Promise<string> {
-  return nonEmpty(typeof source === 'function' ? await source(state) : source, name);
+  const value: unknown = typeof source === 'function' ? await source(state) : source;
+  if (typeof value !== 'string') throw new Error(`${name} must resolve to a string.`);
+  return nonEmpty(value, name);
 }
 
 export function bearerToken(options: { readonly token: StringSource }): AuthProvider {
@@ -93,7 +96,8 @@ export function sessionAuth<const Login extends OperationDefinition>(
       },
       apply: ({ state, request }) => {
         if (options.csrf !== undefined) {
-          const value = String(state.require(options.csrf.state));
+          const value = safePrimitiveText(state.require(options.csrf.state));
+          if (value === undefined) throw new Error('CSRF state must be a primitive value.');
           registerAuthSecret(request, value);
           request.setHeader(options.csrf.header, value);
         }
@@ -107,12 +111,16 @@ export function authFailure(
   phase: 'create' | 'setup' | 'apply' | 'dispose',
   error: unknown
 ): AuthError {
-  if (
-    error instanceof AuthError &&
-    error.details?.profile === profile &&
-    error.details.phase === phase
-  ) {
-    return error;
+  try {
+    if (
+      error instanceof AuthError &&
+      safeOwnData(error.details, 'profile') === profile &&
+      safeOwnData(error.details, 'phase') === phase
+    ) {
+      return error;
+    }
+  } catch {
+    // Hostile proxy errors are normalized below without inspecting their properties.
   }
   return new AuthError(`Authentication profile "${profile}" failed during ${phase}.`, {
     details: { profile, phase },

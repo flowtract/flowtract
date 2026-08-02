@@ -1,5 +1,11 @@
 import { InterpolationError } from '../errors.js';
 import type { ScenarioState } from './state.js';
+import {
+  defineSafeData,
+  safeArrayValues,
+  safeOwnEntries,
+  safePrimitiveText
+} from './safe-inspection.js';
 
 const WHOLE_REFERENCE = /^\{\{([^{}]+)\}\}$/u;
 const EMBEDDED_REFERENCE = /\{\{([^{}]+)\}\}/gu;
@@ -61,7 +67,9 @@ export function interpolateWithTaint(value: unknown, state: ScenarioState): Inte
         matched = true;
         const resolved = resolveReference(name, chain, path);
         tainted ||= resolved.tainted;
-        return String(resolved.value);
+        const text = safePrimitiveText(resolved.value);
+        if (text === undefined) return fail(name, 'invalid');
+        return text;
       });
       if (
         (!matched && (candidate.includes('{{') || candidate.includes('}}'))) ||
@@ -77,7 +85,13 @@ export function interpolateWithTaint(value: unknown, state: ScenarioState): Inte
     if (candidate === null || typeof candidate !== 'object') {
       return { value: candidate, tainted: false };
     }
-    if (!Array.isArray(candidate) && Object.getPrototypeOf(candidate) !== Object.prototype) {
+    const inspected = safeOwnEntries(candidate);
+    if (!inspected.ok) fail(undefined, 'invalid');
+    if (
+      !Array.isArray(candidate) &&
+      inspected.prototype !== Object.prototype &&
+      inspected.prototype !== null
+    ) {
       return { value: candidate, tainted: false };
     }
     visitedNodes += 1;
@@ -86,7 +100,9 @@ export function interpolateWithTaint(value: unknown, state: ScenarioState): Inte
     try {
       if (Array.isArray(candidate)) {
         let tainted = false;
-        const output = candidate.map((item, index) => {
+        const values = safeArrayValues(candidate);
+        if (values === undefined) return fail(undefined, 'invalid');
+        const output = values.map((item, index) => {
           const nested = visit(item, chain, [...path, index]);
           tainted ||= nested.tainted;
           return nested.value;
@@ -95,12 +111,12 @@ export function interpolateWithTaint(value: unknown, state: ScenarioState): Inte
       }
       const output: Record<string, unknown> = {};
       let tainted = false;
-      for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(candidate))) {
-        if (!descriptor.enumerable) continue;
-        if (!('value' in descriptor)) fail(key, 'invalid');
-        const nested = visit(descriptor.value, chain, [...path, key]);
+      for (const entry of inspected.entries) {
+        if (!entry.enumerable) continue;
+        if (entry.kind !== 'data') fail(entry.key, 'invalid');
+        const nested = visit(entry.value, chain, [...path, entry.key]);
         tainted ||= nested.tainted;
-        output[key] = nested.value;
+        defineSafeData(output, entry.key, nested.value);
       }
       return { value: output, tainted };
     } finally {

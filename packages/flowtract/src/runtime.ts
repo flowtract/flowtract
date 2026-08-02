@@ -7,19 +7,41 @@ import type {
   FlowtractScenario,
   ScenarioMetadata
 } from './runtime-types.js';
+import { safeDataProperty } from './internal/safe-inspection.js';
 
 export function createFlowtract(config: FlowtractConfig): FlowtractRuntime {
   const normalized = normalizeConfig(config);
   return Object.freeze({
     async createScenario(metadata?: ScenarioMetadata) {
       try {
-        const transport = await normalized.transport.createSession({
-          baseURL: normalized.baseURL,
-          allowInsecureTls: normalized.allowInsecureTls
-        });
-        return new Scenario(normalized, transport, metadata);
+        const createSession = safeDataProperty(normalized.transport, 'createSession');
+        if (typeof createSession !== 'function') {
+          throw new TypeError('Transport must define createSession() as a data method.');
+        }
+        const transport = await Reflect.apply(createSession, normalized.transport, [
+          {
+            baseURL: normalized.baseURL,
+            allowInsecureTls: normalized.allowInsecureTls
+          }
+        ]);
+        const execute = safeDataProperty(transport, 'execute');
+        const dispose = safeDataProperty(transport, 'dispose');
+        if (typeof execute !== 'function' || typeof dispose !== 'function') {
+          throw new TypeError('Transport session must define execute() and dispose().');
+        }
+        const safeTransport = {
+          execute: (...arguments_: Parameters<typeof transport.execute>) =>
+            Reflect.apply(execute, transport, arguments_),
+          dispose: (...arguments_: Parameters<typeof transport.dispose>) =>
+            Reflect.apply(dispose, transport, arguments_)
+        };
+        return new Scenario(normalized, safeTransport, metadata);
       } catch (error) {
-        if (error instanceof TransportError) throw error;
+        try {
+          if (error instanceof TransportError) throw error;
+        } catch (classificationError) {
+          if (classificationError === error) throw error;
+        }
         throw new TransportError('Failed to create transport session.', {
           details: { kind: 'unknown' },
           cause: error

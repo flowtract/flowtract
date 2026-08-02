@@ -1,6 +1,7 @@
 import { ConfigError } from '../errors.js';
 import type { RedactionConfig } from '../runtime-types.js';
 import type { SecretTracker } from './state.js';
+import { safeSnapshot } from './safe-inspection.js';
 
 const REDACTED = '[REDACTED]';
 const BUILT_IN_HEADERS = new Set([
@@ -93,47 +94,17 @@ export class Redactor {
   }
 
   value(value: unknown): unknown {
-    const seen = new WeakMap<object, unknown>();
-    const visit = (candidate: unknown, path: readonly string[]): unknown => {
-      if (typeof candidate === 'string') return this.text(candidate);
-      if (candidate === null || typeof candidate !== 'object') return candidate;
-      if (seen.has(candidate)) return '[Circular]';
-      if (Array.isArray(candidate)) {
-        const output: unknown[] = [];
-        seen.set(candidate, output);
-        candidate.forEach((item, index) => output.push(visit(item, [...path, String(index)])));
-        return Object.freeze(output);
-      }
-      let prototype: object | null;
-      try {
-        prototype = Object.getPrototypeOf(candidate);
-      } catch {
-        return '[Object]';
-      }
-      if (prototype !== Object.prototype) {
-        return '[Object]';
-      }
-      const output: Record<string, unknown> = {};
-      seen.set(candidate, output);
-      for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(candidate))) {
-        if (!descriptor.enumerable) continue;
-        const nextPath = [...path, key];
-        if (
-          this.#headers.has(key.toLowerCase()) ||
-          BUILT_IN_KEYS.has(key.toLowerCase()) ||
-          this.#paths.some(
-            pattern =>
-              pattern.length === nextPath.length &&
-              pattern.every((segment, index) => segment === '*' || segment === nextPath[index])
-          )
-        ) {
-          output[key] = REDACTED;
-        } else {
-          output[key] = 'value' in descriptor ? visit(descriptor.value, nextPath) : '[Accessor]';
-        }
-      }
-      return Object.freeze(output);
-    };
-    return visit(value, []);
+    return safeSnapshot(value, {
+      string: candidate => this.text(candidate),
+      redact: (key, path) =>
+        this.#headers.has(key.toLowerCase()) ||
+        BUILT_IN_KEYS.has(key.toLowerCase()) ||
+        this.#paths.some(
+          pattern =>
+            pattern.length === path.length &&
+            pattern.every((segment, index) => segment === '*' || segment === path[index])
+        ),
+      redactedValue: REDACTED
+    });
   }
 }
