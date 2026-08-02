@@ -35,7 +35,20 @@ try {
   if (/private package|skipping publish/iu.test(output)) {
     throw new Error('npm skipped the publication rehearsal as private.');
   }
-  const result = JSON.parse(output);
+  const parsed = JSON.parse(output);
+  const results = Array.isArray(parsed)
+    ? parsed
+    : parsed !== null && typeof parsed === 'object'
+      ? Array.isArray(parsed.files)
+        ? [parsed]
+        : Object.values(parsed).filter(
+            value => value !== null && typeof value === 'object' && Array.isArray(value.files)
+          )
+      : [];
+  if (results.length !== 1) {
+    throw new Error('Publication dry run must report exactly one package result.');
+  }
+  const [result] = results;
   if (!Array.isArray(result.files) || result.files.length !== 84) {
     throw new Error(
       `Publication dry run must report the reviewed 84 files, found ${result.files?.length ?? 0}.`
