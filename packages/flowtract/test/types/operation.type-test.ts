@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   defineOperation,
+  type AuthSetupContext,
   type FlowtractClient,
   type OperationInput,
   type OperationResult
@@ -73,6 +74,13 @@ export async function assertClientTypes(client: FlowtractClient): Promise<void> 
     const items = listResult.body.items;
     void items;
   }
+}
+
+export async function assertAuthSetupTypes(context: AuthSetupContext): Promise<void> {
+  await context.execute(ListParts);
+
+  // @ts-expect-error auth setup execution cannot dry-run or override auth
+  await context.execute(ListParts, undefined, { dryRun: true, auth: false });
 }
 
 defineOperation({

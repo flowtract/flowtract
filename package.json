@@ -29,7 +29,8 @@
     "repository:check": "node scripts/repository-check.mjs",
     "secret:check": "node scripts/secret-scan.mjs",
     "clean-clone:check": "node scripts/clean-clone-check.mjs",
-    "qa": "node scripts/qa.mjs"
+    "gate2:qa": "node scripts/qa.mjs",
+    "qa": "npm run gate2:qa"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",

@@ -21,7 +21,7 @@ import {
 
 const startedAt = Date.now();
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), 'flowtract-gate1-'));
+const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), 'flowtract-gate2-'));
 
 try {
   const packOutput = runNpm(['pack', '--json', '--pack-destination', temporaryRoot], {

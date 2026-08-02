@@ -9,14 +9,19 @@ import type {
   OperationInput,
   ParsedOperationInput
 } from '../operation-types.js';
+import type { Redactor } from './redaction.js';
 
 const REQUEST_SECTIONS = ['headers', 'query', 'pathParams', 'body'] as const;
 type RequestSection = (typeof REQUEST_SECTIONS)[number];
 
-function normalizeIssues(issues: readonly z.ZodIssue[]): readonly ContractIssue[] {
+function normalizeIssues(
+  issues: readonly z.ZodIssue[],
+  redactor: Redactor | undefined,
+  tainted: boolean
+): readonly ContractIssue[] {
   return issues.map(issue => ({
     path: issue.path.map(part => (typeof part === 'symbol' ? String(part) : part)),
-    message: issue.message,
+    message: tainted ? '[REDACTED]' : (redactor?.text(issue.message) ?? issue.message),
     code: issue.code
   }));
 }
@@ -35,7 +40,9 @@ function requestError(
 
 export function parseOperationInput<Operation extends OperationDefinition>(
   operation: Operation,
-  input: OperationInput<Operation> | undefined
+  input: OperationInput<Operation> | undefined,
+  redactor?: Redactor,
+  taintedSections: ReadonlySet<string> = new Set()
 ): ParsedOperationInput<Operation> {
   if (
     input !== undefined &&
@@ -81,11 +88,39 @@ export function parseOperationInput<Operation extends OperationDefinition>(
         operation.id,
         section,
         `Request ${section} failed contract validation.`,
-        normalizeIssues(result.error.issues)
+        normalizeIssues(result.error.issues, redactor, taintedSections.has(section))
       );
     }
     parsed[section] = result.data;
   }
 
   return parsed as ParsedOperationInput<Operation>;
+}
+
+export function validateOperationInputShape(
+  operation: OperationDefinition,
+  input: unknown
+): Readonly<Record<string, unknown>> {
+  if (
+    input !== undefined &&
+    (typeof input !== 'object' || input === null || Array.isArray(input))
+  ) {
+    requestError(operation.id, 'input', 'Request input must be an object.', [
+      { path: [], message: 'Expected a request input object.', code: 'invalid_input' }
+    ]);
+  }
+  const raw: Readonly<Record<string, unknown>> =
+    input === undefined ? {} : (input as Readonly<Record<string, unknown>>);
+  const request = operation.request;
+  for (const key of Object.keys(raw)) {
+    if (
+      !REQUEST_SECTIONS.includes(key as RequestSection) ||
+      request?.[key as RequestSection] === undefined
+    ) {
+      requestError(operation.id, 'input', `Request section "${key}" is not declared.`, [
+        { path: [key], message: 'Undeclared request section.', code: 'unrecognized_section' }
+      ]);
+    }
+  }
+  return raw;
 }

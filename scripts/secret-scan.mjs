@@ -1,6 +1,9 @@
 import { execFileSync } from 'node:child_process';
+import { resolve } from 'node:path';
 
-const revisions = execFileSync('git', ['rev-list', '--all'], {
+const repository = resolve(process.cwd()).replaceAll('\\', '/');
+const gitArguments = ['-c', `safe.directory=${repository}`];
+const revisions = execFileSync('git', [...gitArguments, 'rev-list', '--all'], {
   encoding: 'utf8',
   windowsHide: true
 })
@@ -35,7 +38,7 @@ for (const revision of revisions) {
     try {
       const output = execFileSync(
         'git',
-        ['grep', '-n', '-I', '-E', '-e', pattern, revision, '--', '.'],
+        [...gitArguments, 'grep', '-n', '-I', '-E', '-e', pattern, revision, '--', '.'],
         {
           encoding: 'utf8',
           windowsHide: true,

@@ -7,6 +7,7 @@ The main `flowtract` entry point exports:
 - `defineOperation`;
 - `defineConfig`;
 - `createFlowtract`;
+- `FlowtractRuntime`;
 - `FlowtractClient`;
 - `FlowtractScenario`;
 - `HttpTransport` and transport request/response types;
@@ -15,6 +16,11 @@ The main `flowtract` entry point exports:
 - `emptyBody`.
 
 `flowtract/cucumber` and `flowtract/testing` are specified separately.
+
+The decision-complete Gate 2 signatures and lifecycle refinements are defined
+in the [Gate 2 public contracts](gate-2/02-public-contracts.md) and implemented
+on the Gate 2 branch. Cross-platform CI and pull-request review remain required
+before acceptance.
 
 ## Operation definition
 

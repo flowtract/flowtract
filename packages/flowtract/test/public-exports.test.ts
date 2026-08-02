@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as flowtract from '../src/index.js';
 
 describe('public runtime exports', () => {
-  it('matches the reviewed Gate 1 surface', () => {
+  it('matches the reviewed Gate 2 surface', () => {
     expect(Object.keys(flowtract).sort()).toEqual([
       'AuthError',
       'CleanupError',
@@ -16,8 +16,16 @@ describe('public runtime exports', () => {
       'ResponseParseError',
       'TransportError',
       'UndeclaredStatusError',
+      'apiKey',
+      'basicAuth',
+      'bearerToken',
+      'createFlowtract',
+      'defineConfig',
       'defineOperation',
-      'emptyBody'
+      'emptyBody',
+      'hasCleanupError',
+      'playwrightTransport',
+      'sessionAuth'
     ]);
   });
 });

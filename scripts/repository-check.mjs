@@ -40,6 +40,7 @@ const expectedScripts = [
   'repository:check',
   'secret:check',
   'clean-clone:check',
+  'gate2:qa',
   'qa'
 ];
 
@@ -73,7 +74,7 @@ const packagePaths = [
 for (const path of packagePaths) {
   const value = JSON.parse(await readFile(join(root, path), 'utf8'));
   if (value.private !== true) {
-    throw new Error(`Package must remain private during Gate 1.5: ${path}`);
+    throw new Error(`Package must remain private during Gate 2: ${path}`);
   }
 }
 

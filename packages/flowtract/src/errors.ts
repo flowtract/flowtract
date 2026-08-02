@@ -60,7 +60,7 @@ export interface ResponseContractErrorDetails {
 
 export interface AuthErrorDetails {
   readonly profile?: string;
-  readonly phase: 'setup' | 'apply' | 'dispose';
+  readonly phase: 'create' | 'setup' | 'apply' | 'dispose';
 }
 
 export interface InterpolationErrorDetails {
@@ -197,4 +197,16 @@ export class CleanupError extends FlowtractError<'FLOWTRACT_CLEANUP', CleanupErr
   constructor(message: string, options: ConcreteErrorOptions<CleanupErrorDetails> = {}) {
     super('FLOWTRACT_CLEANUP', message, options);
   }
+}
+
+export type ErrorWithCleanup = Error & {
+  readonly cleanupError: CleanupError;
+};
+
+export function hasCleanupError(error: unknown): error is ErrorWithCleanup {
+  return (
+    error instanceof Error &&
+    'cleanupError' in error &&
+    (error as Partial<ErrorWithCleanup>).cleanupError instanceof CleanupError
+  );
 }

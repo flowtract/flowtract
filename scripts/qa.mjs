@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 
 const npmCli = process.env.npm_execpath;
 if (npmCli === undefined) {
-  throw new Error('npm_execpath is required to run the Gate 1 QA suite.');
+  throw new Error('npm_execpath is required to run the Gate 2 QA suite.');
 }
 
 const startedAt = Date.now();
@@ -29,22 +29,28 @@ function runScript(script) {
   });
 }
 
-const independentChecks = [
-  'format:check',
-  'lint',
-  'type-check',
-  'coverage',
-  'build',
-  'repository:check',
-  'secret:check'
-];
-const results = await Promise.all(independentChecks.map(runScript));
-const failures = results.filter(result => result.error !== undefined);
-if (failures.length > 0) {
-  throw new AggregateError(
-    failures.map(failure => failure.error),
-    `Flowtract QA checks failed: ${failures.map(failure => failure.script).join(', ')}`
-  );
+async function runChecks(scripts) {
+  const results = await Promise.all(scripts.map(runScript));
+  const failures = results.filter(result => result.error !== undefined);
+  if (failures.length > 0) {
+    throw new AggregateError(
+      failures.map(failure => failure.error),
+      `Flowtract Gate 2 QA checks failed: ${failures.map(failure => failure.script).join(', ')}`
+    );
+  }
+}
+
+await runChecks(['format:check', 'lint', 'type-check', 'repository:check', 'secret:check']);
+await runChecks(['coverage']);
+
+const proofDurationMs = Date.now() - startedAt;
+if (proofDurationMs >= 60_000) {
+  throw new Error(`Flowtract Gate 2 proof exceeded 60 seconds (${proofDurationMs}ms).`);
+}
+
+const buildResult = await runScript('build');
+if (buildResult.error !== undefined) {
+  throw buildResult.error;
 }
 
 const packageResult = await runScript('package:check');
@@ -53,8 +59,6 @@ if (packageResult.error !== undefined) {
 }
 
 const durationMs = Date.now() - startedAt;
-if (durationMs >= 60_000) {
-  throw new Error(`Flowtract QA exceeded 60 seconds (${durationMs}ms).`);
-}
-
-console.log(`Flowtract QA passed in ${durationMs}ms.`);
+console.log(
+  `Flowtract Gate 2 QA passed: runtime proof ${proofDurationMs}ms; full QA ${durationMs}ms.`
+);

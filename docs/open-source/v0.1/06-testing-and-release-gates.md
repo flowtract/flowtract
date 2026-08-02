@@ -121,9 +121,9 @@ review as applicable.
 
 ### Gate 1 — typed contracts
 
-**Implementation status:** locally proven on Windows/Node 22; the committed
-Windows/Ubuntu Node 22/24 workflow must pass after publication before Gate 1 is
-considered cross-platform complete.
+**Implementation status:** accepted and proven on Windows and Ubuntu with
+Node.js 22 and 24. Gate 1.5 activated the clean public repository and repeated
+the package, compiler, CodeQL, and Scorecard proof.
 
 - workspaces and exports established;
 - `defineOperation` and result unions complete;
@@ -132,6 +132,10 @@ considered cross-platform complete.
 
 ### Gate 2 — execution foundation
 
+**Implementation status:** implemented and locally proof-gated; cross-platform
+CI and pull-request review remain required for acceptance.
+
+- canonical Gate 2 specification approved;
 - transport port and Playwright adapter complete;
 - scenario, auth, interpolation, cleanup, redaction, and secure config complete;
 - authenticated CRUD proof passes in parallel without tracked changes.
