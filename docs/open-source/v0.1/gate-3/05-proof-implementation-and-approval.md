@@ -19,7 +19,9 @@ small signed commits.
 
 - reproduce the clean Gate 2 baseline;
 - remove the unused optional Cucumber peer;
-- advance development `esbuild` to the patched line;
+- update development `esbuild` to 0.28.1;
+- migrate ESLint to 10.8.0 with `@typescript-eslint` 8.65.0 and eliminate the
+  high transitive `brace-expansion` finding without suppressing lint scope;
 - add minimum/latest peer consumers and macOS/Node 24 CI;
 - lock the root export and compatibility snapshot.
 
@@ -116,14 +118,17 @@ npm run clean-clone:check
 npm run core:soak
 npm audit --omit=dev --audit-level=high
 npm sbom --sbom-format cyclonedx
-npm publish --dry-run --workspace flowtract
+npm run package:publish-dry-run
 git diff --check
 git status --short
 ```
 
-SBOM and dry-run artifacts remain untracked. The cross-platform soak may be
-executed through manual release-blocking workflows, but its durable run URLs
-must identify the final candidate SHA.
+`package:publish-dry-run` uses a temporary manifest that differs only by
+omitting `private`, runs npm with `--dry-run --tag next`, verifies the archive
+against package proof, and publishes nothing. SBOM and dry-run artifacts remain
+untracked. The cross-platform soak may be executed through manual
+release-blocking workflows, but its durable run URLs must identify the final
+candidate SHA.
 
 ## Failure policy
 

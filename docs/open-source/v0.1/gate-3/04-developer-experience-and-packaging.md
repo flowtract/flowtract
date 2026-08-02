@@ -96,3 +96,12 @@ unsupported-version failures must be actionable in clean consumers.
 
 Publication, provenance issuance, documentation-site deployment, and the
 `create-flowtract` package remain later actions.
+
+Gate 3 nevertheless proves publication readiness without changing the tracked
+private manifest. An internal script copies the built package to a temporary
+directory, removes only `private` from that temporary manifest, verifies all
+other publish-relevant fields against the tracked manifest, and runs
+`npm publish --dry-run --tag next` there. It fails if npm reports that the
+package was skipped as private or if the resulting file list differs from the
+reviewed package proof. The temporary directory is always removed and no
+registry publication is permitted.

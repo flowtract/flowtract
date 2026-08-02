@@ -73,11 +73,19 @@ These are Gate 3 work. External adoption remains a later gate.
 
 ## Bounded implementation debt
 
-The workspace currently declares `esbuild` in the development toolchain with a
-range that does not reach the available patched `0.28.1` line. The known alert
-is development-only and does not change the zero-vulnerability production
-audit, but Gate 3 must update it and repeat dependency, build, archive, and
-consumer proof.
+The full development audit recorded on 2026-08-02 contains two findings while
+the production audit remains zero:
+
+- high `GHSA-mh99-v99m-4gvg` in `brace-expansion <1.1.17` through the
+  unsupported ESLint 8 dependency tree;
+- low `GHSA-g7r4-m6w7-qqqr` in direct development dependency
+  `esbuild >=0.27.3 <0.28.1`.
+
+Gate 3 must migrate the lint stack to ESLint 10.8.0 with the existing
+compatible `@typescript-eslint` 8.65.0 line and update direct `esbuild` to
+0.28.1. It must then repeat lint, dependency, build, archive, and consumer
+proof. These findings affect repository tooling, not the shipped runtime, but
+the high finding blocks a production-candidate verdict until removed.
 
 The `flowtract` package also declares an unused optional Cucumber peer while no
 Cucumber export exists. Gate 3 must remove that peer and prove that the root

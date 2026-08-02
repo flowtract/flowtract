@@ -78,10 +78,12 @@ requires license, maintenance, install-script, transitive-risk, audit, archive,
 and clean-clone review. Deterministic in-repository generators are preferred
 when they can provide replayable hostile cases without reducing coverage.
 
-The unused optional Cucumber peer is removed during implementation. The
-development `esbuild` range is advanced to a patched release and verified
-through the complete package proof. Zod and Playwright remain peer dependencies
-and project-owned instances remain outside Flowtract freezing/ownership.
+The unused optional Cucumber peer is removed during implementation. Direct
+development `esbuild` advances to 0.28.1. ESLint advances to 10.8.0 while
+`@typescript-eslint` remains on its compatible 8.65.0 line. The lint migration
+must preserve existing zero-error rules and may not suppress affected paths.
+Zod and Playwright remain peer dependencies and project-owned instances remain
+outside Flowtract freezing/ownership.
 
 ## Claim discipline
 

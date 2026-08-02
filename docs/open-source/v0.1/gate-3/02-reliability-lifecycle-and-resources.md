@@ -103,7 +103,8 @@ Acceptance requires:
 - zero incorrect result or unexpected rejection;
 - zero generated-secret occurrence;
 - zero live Flowtract/proof resource after final teardown;
-- no monotonic post-warm-up retained-heap growth across the final five samples;
+- the median of the final five forced-GC heap samples does not exceed the
+  five-sample post-warm-up median by more than the larger of 16 MiB or 20%;
 - normal process termination.
 
 Raw RSS is reported only as context and never used as a cross-platform gate.
