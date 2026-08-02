@@ -10,7 +10,7 @@ import type {
   ParsedOperationInput
 } from '../operation-types.js';
 import type { Redactor } from './redaction.js';
-import { defineSafeData, safeOwnEntries, safeOwnData } from './safe-inspection.js';
+import { defineSafeData, safeIsArray, safeOwnEntries, safeOwnData } from './safe-inspection.js';
 
 const REQUEST_SECTIONS = ['headers', 'query', 'pathParams', 'body'] as const;
 type RequestSection = (typeof REQUEST_SECTIONS)[number];
@@ -20,7 +20,8 @@ function ownedInput(
   input: unknown
 ): Readonly<Record<string, unknown>> {
   if (input === undefined) return {};
-  if (typeof input !== 'object' || input === null || Array.isArray(input)) {
+  const isArray = safeIsArray(input);
+  if (typeof input !== 'object' || input === null || isArray !== false) {
     requestError(operation.id, 'input', 'Request input must be an object.', [
       { path: [], message: 'Expected a request input object.', code: 'invalid_input' }
     ]);

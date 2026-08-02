@@ -29,6 +29,7 @@ import type { Redactor } from './redaction.js';
 import {
   defineSafeData,
   safeArrayValues,
+  safeIsArray,
   safeJsonValue,
   safeOwnEntries,
   safeOwnData
@@ -57,7 +58,8 @@ function plainObject(
   value: unknown
 ): Readonly<Record<string, unknown>> {
   if (value === undefined) return {};
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+  const isArray = safeIsArray(value);
+  if (value === null || typeof value !== 'object' || isArray !== false) {
     requestFailure(
       operation,
       section,
@@ -109,9 +111,10 @@ function mergeHeaders(
     );
   }
   const current = input.headers;
+  const currentIsArray = safeIsArray(current);
   if (
     current !== undefined &&
-    (current === null || typeof current !== 'object' || Array.isArray(current))
+    (current === null || typeof current !== 'object' || currentIsArray !== false)
   ) {
     requestFailure(
       operation,
@@ -199,11 +202,19 @@ function queryValue(
 ): QueryValue | undefined {
   if (value === undefined) return undefined;
   if (value === null) return '';
-  if (Array.isArray(value)) {
-    if (!(name in value) && value.length > 0) {
-      // Sparse arrays are rejected by comparing own keys below.
-    }
-    if (Object.keys(value).length !== value.length) {
+  const isArray = safeIsArray(value);
+  if (isArray === undefined) {
+    requestFailure(
+      operation,
+      'query',
+      [name],
+      'Query values must be scalar or scalar arrays.',
+      'invalid_query'
+    );
+  }
+  if (isArray) {
+    const values = safeArrayValues(value);
+    if (values === undefined) {
       requestFailure(
         operation,
         'query',
@@ -212,9 +223,9 @@ function queryValue(
         'invalid_query'
       );
     }
-    return value.map((item, index) => {
+    return values.map((item, index) => {
       const parsed = queryValue(operation, name, item);
-      if (parsed === undefined || Array.isArray(parsed)) {
+      if (parsed === undefined || safeIsArray(parsed) === true) {
         requestFailure(
           operation,
           'query',
@@ -398,6 +409,14 @@ function normalizeZodIssues(
   }));
 }
 
+function isUint8Array(value: unknown): value is Uint8Array {
+  try {
+    return value instanceof Uint8Array && ArrayBuffer.isView(value);
+  } catch {
+    return false;
+  }
+}
+
 function validateTransport(
   operation: OperationDefinition,
   response: TransportResponse
@@ -416,7 +435,7 @@ function validateTransport(
     (status as number) > 599 ||
     !Number.isFinite(durationMs) ||
     (durationMs as number) < 0 ||
-    !(body instanceof Uint8Array) ||
+    !isUint8Array(body) ||
     headerValues === undefined ||
     typeof responseUrl !== 'string'
   ) {

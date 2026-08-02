@@ -1,6 +1,11 @@
 import { InterpolationError } from '../errors.js';
 import type { AuthStateAccess, MutableAuthRequest } from '../runtime-types.js';
-import { safeOwnEntries, safePrimitiveText } from './safe-inspection.js';
+import {
+  SAFE_INSPECTION_LIMITS,
+  safeIsArray,
+  safeOwnEntries,
+  safePrimitiveText
+} from './safe-inspection.js';
 
 export const authSecretRegistrar = Symbol('flowtract.authSecretRegistrar');
 
@@ -27,7 +32,14 @@ export class SecretTracker {
 
   add(value: unknown): void {
     const seen = new WeakSet<object>();
-    const visit = (candidate: unknown): void => {
+    const pending: Array<{ readonly value: unknown; readonly depth: number }> = [
+      { value, depth: 0 }
+    ];
+    let nodes = 0;
+    while (pending.length > 0) {
+      const current = pending.pop();
+      if (current === undefined) break;
+      const candidate = current.value;
       const primitive = safePrimitiveText(candidate);
       if (
         typeof candidate === 'string' ||
@@ -35,26 +47,36 @@ export class SecretTracker {
         typeof candidate === 'boolean' ||
         typeof candidate === 'bigint'
       ) {
-        const text = primitive ?? '';
+        const text = typeof candidate === 'string' ? candidate : (primitive ?? '');
         if (text.length > 0) this.#strings.add(text);
-        return;
+        continue;
       }
-      if (candidate === null || typeof candidate !== 'object' || seen.has(candidate)) return;
+      if (
+        candidate === null ||
+        typeof candidate !== 'object' ||
+        seen.has(candidate) ||
+        current.depth >= SAFE_INSPECTION_LIMITS.depth ||
+        nodes >= SAFE_INSPECTION_LIMITS.nodes
+      ) {
+        continue;
+      }
       seen.add(candidate);
+      nodes += 1;
       const inspected = safeOwnEntries(candidate);
+      const isArray = safeIsArray(candidate);
       if (
         !inspected.ok ||
-        (!Array.isArray(candidate) &&
-          inspected.prototype !== Object.prototype &&
-          inspected.prototype !== null)
+        isArray === undefined ||
+        (!isArray && inspected.prototype !== Object.prototype && inspected.prototype !== null)
       ) {
-        return;
+        continue;
       }
       for (const entry of inspected.entries) {
-        if (entry.enumerable && entry.kind === 'data') visit(entry.value);
+        if (entry.enumerable && entry.kind === 'data') {
+          pending.push({ value: entry.value, depth: current.depth + 1 });
+        }
       }
-    };
-    visit(value);
+    }
   }
 
   strings(): readonly string[] {

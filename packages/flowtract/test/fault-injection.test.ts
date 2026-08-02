@@ -68,6 +68,56 @@ describe('Gate 3 fault containment', () => {
     expect(invoked).toBe(false);
   });
 
+  it('rejects a hostile default auth value without coercing it', () => {
+    let invoked = false;
+    const defaultAuth = {
+      toString() {
+        invoked = true;
+        return 'fault';
+      }
+    };
+    expect(() =>
+      createFlowtract({
+        baseURL: 'https://example.test',
+        operations: [Operation],
+        transport: transportWith(),
+        defaultAuth: defaultAuth as never
+      })
+    ).toThrow(ConfigError);
+    expect(invoked).toBe(false);
+  });
+
+  it('rejects a hostile base URL without coercing it', () => {
+    let invoked = false;
+    const baseURL = {
+      toString() {
+        invoked = true;
+        return 'https://example.test';
+      }
+    };
+    expect(() =>
+      createFlowtract({
+        baseURL: baseURL as never,
+        operations: [Operation],
+        transport: transportWith()
+      })
+    ).toThrow(ConfigError);
+    expect(invoked).toBe(false);
+  });
+
+  it('disposes a returned transport session when its contract is invalid', async () => {
+    const dispose = vi.fn();
+    const candidate = createFlowtract({
+      baseURL: 'https://example.test',
+      operations: [Operation],
+      transport: {
+        createSession: async () => ({ execute: undefined, dispose }) as never
+      }
+    });
+    await expect(candidate.createScenario()).rejects.toBeInstanceOf(TransportError);
+    expect(dispose).toHaveBeenCalledOnce();
+  });
+
   it.each([
     ['synchronous Error', () => new Error('synthetic transport secret')],
     ['primitive', () => 'synthetic transport secret'],
@@ -179,6 +229,29 @@ describe('Gate 3 fault containment', () => {
     expect(hasCleanupError(observed)).toBe(true);
   });
 
+  it('wraps a hostile extensible primary when cleanup evidence cannot be attached', async () => {
+    const primary = new Proxy(new Error('hostile primary'), {
+      defineProperty() {
+        throw new Error('synthetic define failure');
+      }
+    });
+    const candidate = runtime(
+      transportWith(
+        () => response(),
+        () => Promise.reject('dispose failure')
+      )
+    );
+    let observed: unknown;
+    try {
+      await candidate.runScenario(() => Promise.reject(primary));
+    } catch (error) {
+      observed = error;
+    }
+    expect(observed).not.toBe(primary);
+    expect(observed).toMatchObject({ message: 'hostile primary', cause: primary });
+    expect(hasCleanupError(observed)).toBe(true);
+  });
+
   it('contains malformed, invalid-contract, and hostile transport responses', async () => {
     await expect(
       runtime(transportWith(() => response('{malformed'))).runScenario(scenario =>
@@ -224,6 +297,7 @@ describe('Gate 3 fault containment', () => {
 
   it('keeps public error serialization bounded, frozen, JSON-safe, and cause-free', () => {
     const details: Record<string, unknown> = { text: 'x'.repeat(20_000) };
+    details[`oversized-${'k'.repeat(20_000)}`] = 'synthetic oversized-key secret';
     details.self = details;
     Object.defineProperty(details, 'accessor', {
       enumerable: true,
@@ -242,6 +316,31 @@ describe('Gate 3 fault containment', () => {
     expect(serialized.length).toBeLessThan(9_000);
     expect(serialized).not.toContain('synthetic');
     expect(serialized).not.toContain('cause');
+  });
+
+  it('serializes the immutable construction snapshot after hostile property replacement', () => {
+    let invoked = false;
+    const error = new FlowtractError('FLOWTRACT_CONFIG', 'x'.repeat(20_000), {
+      operationId: 'snapshot',
+      details: { path: 'config' }
+    });
+    for (const property of ['code', 'message', 'operationId', 'details']) {
+      Object.defineProperty(error, property, {
+        configurable: true,
+        get() {
+          invoked = true;
+          throw new Error('synthetic getter secret');
+        }
+      });
+    }
+    const json = error.toJSON();
+    expect(invoked).toBe(false);
+    expect(json).toMatchObject({
+      code: 'FLOWTRACT_CONFIG',
+      operationId: 'snapshot',
+      details: { path: 'config' }
+    });
+    expect(json.message).toHaveLength(8_192);
   });
 
   it('rejects request accessors as a stable request contract failure', async () => {

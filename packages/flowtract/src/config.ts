@@ -42,7 +42,10 @@ function positiveTimeout(value: number | undefined, path: string, fallback: numb
   return resolved;
 }
 
-function normalizeBaseURL(value: string): string {
+function normalizeBaseURL(value: unknown): string {
+  if (typeof value !== 'string') {
+    fail('baseURL', 'baseURL must be an absolute HTTP or HTTPS URL.');
+  }
   let url: URL;
   try {
     url = new URL(value);
@@ -177,7 +180,11 @@ export function normalizeConfig(config: FlowtractConfig): NormalizedConfig {
     defineSafeData(authOutput, entry.key, entry.value);
   }
   const auth = Object.freeze(authOutput);
-  const defaultAuth = (safeOwnData(config, 'defaultAuth') ?? false) as string | false;
+  const rawDefaultAuth = safeOwnData(config, 'defaultAuth') ?? false;
+  if (rawDefaultAuth !== false && typeof rawDefaultAuth !== 'string') {
+    fail('defaultAuth', 'defaultAuth must be an authentication profile name or false.');
+  }
+  const defaultAuth = rawDefaultAuth as string | false;
   validateAuth(operations, auth, defaultAuth);
   const timeoutMs = positiveTimeout(
     safeOwnData(config, 'timeoutMs') as number | undefined,
@@ -192,7 +199,7 @@ export function normalizeConfig(config: FlowtractConfig): NormalizedConfig {
   );
   new Redactor(redaction, new SecretTracker());
   return Object.freeze({
-    baseURL: normalizeBaseURL(safeOwnData(config, 'baseURL') as string),
+    baseURL: normalizeBaseURL(safeOwnData(config, 'baseURL')),
     operations,
     registry,
     transport:

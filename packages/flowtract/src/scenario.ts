@@ -91,6 +91,59 @@ function normalizePrimary(error: unknown): Error {
     : new Error('Scenario callback threw a non-Error value.', { cause: error });
 }
 
+function flowtractErrorCode(error: unknown): FlowtractError['code'] | undefined {
+  try {
+    return error instanceof FlowtractError ? error.code : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function asCleanupError(error: unknown): CleanupError {
+  try {
+    if (error instanceof CleanupError) return error;
+  } catch {
+    // Hostile proxy failures are normalized below.
+  }
+  return new CleanupError('Scenario cleanup failed.', {
+    details: {
+      failures: [
+        {
+          label: 'close',
+          message: safeErrorMessage(error, 'Unknown cleanup failure')
+        }
+      ]
+    },
+    cause: error
+  });
+}
+
+function attachCleanupError(primary: Error, cleanup: CleanupError): Error {
+  try {
+    if (
+      Object.isExtensible(primary) &&
+      Reflect.defineProperty(primary, 'cleanupError', {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: cleanup
+      })
+    ) {
+      return primary;
+    }
+  } catch {
+    // A hostile primary is wrapped below so cleanup evidence cannot be lost.
+  }
+  const wrapped = new Error(safeErrorMessage(primary, 'Scenario failed.'), { cause: primary });
+  Object.defineProperty(wrapped, 'cleanupError', {
+    configurable: false,
+    enumerable: false,
+    writable: false,
+    value: cleanup
+  });
+  return wrapped;
+}
+
 export class Scenario implements FlowtractScenario {
   readonly metadata: Readonly<ScenarioMetadata>;
   readonly id: string;
@@ -327,7 +380,7 @@ export class Scenario implements FlowtractScenario {
       });
       return result;
     } catch (error) {
-      const code = error instanceof FlowtractError ? error.code : undefined;
+      const code = flowtractErrorCode(error);
       this.#emit(
         phase === 'auth' ? 'auth' : phase === 'cleanup' ? 'cleanup' : failurePhase,
         'error',
@@ -539,47 +592,12 @@ export async function runScenario<Result>(
   try {
     await scenario.close();
   } catch (cleanupError) {
-    cleanup =
-      cleanupError instanceof CleanupError
-        ? cleanupError
-        : new CleanupError('Scenario cleanup failed.', {
-            details: {
-              failures: [
-                {
-                  label: 'close',
-                  message: safeErrorMessage(cleanupError, 'Unknown cleanup failure')
-                }
-              ]
-            },
-            cause: cleanupError
-          });
+    cleanup = asCleanupError(cleanupError);
   }
 
   if (primary !== undefined) {
     if (cleanup === undefined) throw primary;
-    let extensible: boolean;
-    try {
-      extensible = Object.isExtensible(primary);
-    } catch {
-      extensible = false;
-    }
-    if (extensible) {
-      Object.defineProperty(primary, 'cleanupError', {
-        configurable: false,
-        enumerable: false,
-        writable: false,
-        value: cleanup
-      });
-      throw primary;
-    }
-    const wrapped = new Error(safeErrorMessage(primary, 'Scenario failed.'), { cause: primary });
-    Object.defineProperty(wrapped, 'cleanupError', {
-      configurable: false,
-      enumerable: false,
-      writable: false,
-      value: cleanup
-    });
-    throw wrapped;
+    throw attachCleanupError(primary, cleanup);
   }
 
   if (cleanup !== undefined) throw cleanup;

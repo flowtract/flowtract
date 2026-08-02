@@ -106,6 +106,15 @@ export interface FlowtractErrorJson<Code extends FlowtractErrorCode, Details> {
   readonly details?: Details;
 }
 
+interface SerializedErrorSnapshot {
+  readonly code: FlowtractErrorCode;
+  readonly message: string;
+  readonly operationId?: string;
+  readonly details?: unknown;
+}
+
+const SERIALIZED_ERRORS = new WeakMap<object, SerializedErrorSnapshot>();
+
 /** Base class for bounded, code-stable Flowtract failures. */
 export class FlowtractError<
   Code extends FlowtractErrorCode = FlowtractErrorCode,
@@ -116,14 +125,25 @@ export class FlowtractError<
   readonly details: Details | undefined;
 
   constructor(code: Code, message: string, options: FlowtractErrorOptions<Details> = {}) {
+    const boundedMessage =
+      typeof message === 'string' ? boundedText(message) : 'Flowtract operation failed.';
     const cause = safeOwnData(options, 'cause');
-    super(message, cause === undefined ? undefined : { cause });
+    super(boundedMessage, cause === undefined ? undefined : { cause });
     this.code = code;
     const operationId = safeOwnData(options, 'operationId');
     this.operationId = typeof operationId === 'string' ? operationId : undefined;
     const details = safeOwnData(options, 'details');
     this.details =
       details === undefined ? undefined : (safeSnapshot(details) as Details | undefined);
+    SERIALIZED_ERRORS.set(
+      this,
+      Object.freeze({
+        code,
+        message: boundedMessage,
+        ...(this.operationId === undefined ? {} : { operationId: this.operationId }),
+        ...(this.details === undefined ? {} : { details: this.details })
+      })
+    );
     Object.defineProperty(this, 'name', {
       configurable: true,
       value: new.target.name
@@ -131,11 +151,14 @@ export class FlowtractError<
   }
 
   toJSON(): FlowtractErrorJson<Code, Details> {
+    const snapshot = SERIALIZED_ERRORS.get(this);
     const output: Record<string, unknown> = {};
-    defineSafeData(output, 'code', this.code);
-    defineSafeData(output, 'message', this.message);
-    if (this.operationId !== undefined) defineSafeData(output, 'operationId', this.operationId);
-    if (this.details !== undefined) defineSafeData(output, 'details', safeSnapshot(this.details));
+    defineSafeData(output, 'code', snapshot?.code ?? 'FLOWTRACT_CONFIG');
+    defineSafeData(output, 'message', snapshot?.message ?? 'Flowtract operation failed.');
+    if (snapshot?.operationId !== undefined)
+      defineSafeData(output, 'operationId', snapshot.operationId);
+    if (snapshot?.details !== undefined)
+      defineSafeData(output, 'details', safeSnapshot(snapshot.details));
     return Object.freeze(output) as unknown as FlowtractErrorJson<Code, Details>;
   }
 }
@@ -239,9 +262,14 @@ export type ErrorWithCleanup = Error & {
 export function hasCleanupError(error: unknown): error is ErrorWithCleanup {
   if (!safeIsError(error)) return false;
   const cleanupError = safeOwnData(error, 'cleanupError');
-  return cleanupError instanceof CleanupError;
+  try {
+    return cleanupError instanceof CleanupError;
+  } catch {
+    return false;
+  }
 }
 import {
+  boundedText,
   defineSafeData,
   safeIsError,
   safeOwnData,

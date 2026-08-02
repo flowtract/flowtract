@@ -5,7 +5,8 @@ import {
   FlowtractError,
   InterpolationError,
   RequestContractError,
-  defineOperation
+  defineOperation,
+  hasCleanupError
 } from '../src/index.js';
 import { parseOperationResponse, RequestBuilder } from '../src/internal/http.js';
 import { interpolateWithTaint, interpolateValue } from '../src/internal/interpolate.js';
@@ -164,6 +165,59 @@ describe('Gate 3 hostile descriptor and proxy containment', () => {
       );
     }
   );
+
+  it('contains proxies that revoke themselves during descriptor inspection', () => {
+    const selfRevokingArray = (): unknown => {
+      let revoke = (): void => undefined;
+      const target = ['synthetic secret'];
+      const pair = Proxy.revocable(target, {
+        getOwnPropertyDescriptor(current, key) {
+          const descriptor = Reflect.getOwnPropertyDescriptor(current, key);
+          if (key === 'length') revoke();
+          return descriptor;
+        }
+      });
+      revoke = pair.revoke;
+      return pair.proxy;
+    };
+
+    const redactor = new Redactor(undefined, new SecretTracker());
+    expect(() => redactor.value(selfRevokingArray())).not.toThrow();
+    expect(redactor.value(selfRevokingArray())).toBe('[Object]');
+    expect(() => new SecretTracker().add(selfRevokingArray())).not.toThrow();
+    expect(() =>
+      interpolateValue(selfRevokingArray(), new ScenarioState(new SecretTracker()))
+    ).toThrow(InterpolationError);
+
+    const error = new Error('primary');
+    Object.defineProperty(error, 'cleanupError', {
+      value: new Proxy(
+        {},
+        {
+          getPrototypeOf() {
+            throw new Error('synthetic secret');
+          }
+        }
+      )
+    });
+    expect(hasCleanupError(error)).toBe(false);
+  });
+
+  it('bounds deeply nested secret registration and structural interpolation', () => {
+    let secret: Record<string, unknown> = { value: 'deep secret' };
+    for (let depth = 0; depth < 20_000; depth += 1) secret = { nested: secret };
+    const tracker = new SecretTracker();
+    expect(() => tracker.add(secret)).not.toThrow();
+    const longSecret = `${'s'.repeat(9_000)}-tail`;
+    tracker.add(longSecret);
+    expect(new Redactor(undefined, tracker).text(`value=${longSecret}`)).toBe('value=[REDACTED]');
+
+    let input: unknown = 'leaf';
+    for (let depth = 0; depth < 65; depth += 1) input = [input];
+    expect(() => interpolateValue(input, new ScenarioState(new SecretTracker()))).toThrow(
+      InterpolationError
+    );
+  });
 
   it('never invokes getters, toJSON, custom toString, or prototype mutation keys', () => {
     let invocations = 0;

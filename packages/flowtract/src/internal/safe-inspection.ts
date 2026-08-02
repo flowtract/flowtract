@@ -36,6 +36,14 @@ export function safePrimitiveText(value: unknown): string | undefined {
   return undefined;
 }
 
+export function safeIsArray(value: unknown): boolean | undefined {
+  try {
+    return Array.isArray(value);
+  } catch {
+    return undefined;
+  }
+}
+
 export function safeOwnEntries(value: unknown): SafeOwnEntriesResult {
   if (!objectLike(value)) return { ok: false, entries: [] };
   let prototype: object | null;
@@ -93,11 +101,7 @@ export function safeDataProperty(value: unknown, key: string): unknown {
 }
 
 export function safeArrayValues(value: unknown): readonly unknown[] | undefined {
-  try {
-    if (!Array.isArray(value)) return undefined;
-  } catch {
-    return undefined;
-  }
+  if (!objectLike(value) || safeIsArray(value) !== true) return undefined;
   const length = safeOwnData(value, 'length');
   if (!Number.isSafeInteger(length) || (length as number) < 0 || (length as number) > 100_000) {
     return undefined;
@@ -141,10 +145,15 @@ export function safeSnapshot(value: unknown, options: SafeSnapshotOptions = {}):
   const redactedValue = options.redactedValue ?? '[REDACTED]';
   const seen = new WeakSet<object>();
   let nodes = 0;
+  let textCharacters = 0;
 
   const visit = (candidate: unknown, path: readonly string[], depth: number): unknown => {
+    if (nodes >= maximumNodes) return '[Object]';
+    nodes += 1;
     if (typeof candidate === 'string') {
-      const bounded = boundedText(candidate, maximumText);
+      const remaining = Math.max(0, maximumText - textCharacters);
+      const bounded = boundedText(candidate, remaining);
+      textCharacters += Array.from(bounded).length;
       return options.string?.(bounded, path) ?? bounded;
     }
     if (
@@ -157,14 +166,14 @@ export function safeSnapshot(value: unknown, options: SafeSnapshotOptions = {}):
     }
     if (typeof candidate === 'bigint') return String(candidate);
     if (typeof candidate === 'symbol' || typeof candidate === 'function') return '[Object]';
-    if (depth >= maximumDepth || nodes >= maximumNodes) return '[Object]';
+    if (depth >= maximumDepth) return '[Object]';
     if (seen.has(candidate)) return '[Circular]';
     seen.add(candidate);
-    nodes += 1;
 
     const inspected = safeOwnEntries(candidate);
     if (!inspected.ok) return '[Object]';
-    const isArray = Array.isArray(candidate);
+    const isArray = safeIsArray(candidate);
+    if (isArray === undefined) return '[Object]';
     if (!isArray && inspected.prototype !== Object.prototype && inspected.prototype !== null) {
       return '[Object]';
     }
@@ -174,6 +183,9 @@ export function safeSnapshot(value: unknown, options: SafeSnapshotOptions = {}):
       : (Object.create(null) as Record<string, unknown>);
     for (const entry of inspected.entries) {
       if (!entry.enumerable || (isArray && entry.key === 'length')) continue;
+      const keyCharacters = Array.from(entry.key).length;
+      if (textCharacters + keyCharacters > maximumText) break;
+      textCharacters += keyCharacters;
       const nextPath = [...path, entry.key];
       const nested =
         options.redact?.(entry.key, nextPath) === true
@@ -226,7 +238,8 @@ export function safeJsonValue(value: unknown): SafeJsonResult {
 
     const inspected = safeOwnEntries(candidate);
     if (!inspected.ok) return { ok: false };
-    const isArray = Array.isArray(candidate);
+    const isArray = safeIsArray(candidate);
+    if (isArray === undefined) return { ok: false };
     if (!isArray && inspected.prototype !== Object.prototype && inspected.prototype !== null) {
       return { ok: false };
     }
