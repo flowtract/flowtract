@@ -37,6 +37,11 @@ migration guidance.
   scenario isolation, cleanup I/O, TLS policy, timeout/abort, and disposal.
 - Gate 2 package consumers, compiler-matrix declarations, coverage thresholds,
   repository checks, and the `gate2:qa` compatibility gate.
+- Draft Gate 3 core production-candidate specification covering lifecycle
+  races, fault injection, hostile inputs, stress, soak, compatibility,
+  security, packaging, and root-runtime developer experience.
+- Non-authorizing future design records for deferred Cucumber/CLI work and a
+  bounded command-target feasibility candidate.
 
 ### Fixed
 
@@ -53,7 +58,10 @@ migration guidance.
 
 ### Current limitations
 
-- Gate 2 is implemented and locally proof-gated; pull-request review and the
-  required Windows/Ubuntu Node 22/24 CI matrix remain acceptance prerequisites.
+- Gate 2 is accepted at `cc30efe`; Gate 3 core hardening remains
+  specification-only and awaits repository-owner approval.
+- Cucumber, CLI, generator, configuration discovery, command execution, and
+  artifact behavior are deferred future designs and are not part of the `0.1`
+  root-package compatibility promise.
 - The legacy prototype is retained privately as historical behavioral evidence.
 - No npm package or production-ready release exists.

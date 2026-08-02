@@ -86,8 +86,8 @@ Gate 2 MUST NOT add:
 - npm publication, a prerelease, or a production-readiness claim;
 - compatibility adapters for the archived prototype.
 
-Gate 2 accepts an already-imported typed configuration object. Loading
-`flowtract.config.ts` belongs to Gate 3.
+Gate 2 accepts an already-imported typed configuration object. Configuration
+file discovery/loading remains deferred beyond the root-core Gate 3.
 
 ## Locked implementation posture
 

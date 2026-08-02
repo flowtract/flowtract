@@ -13,8 +13,7 @@ The first audience is:
 - TypeScript QA automation engineers and SDETs;
 - backend engineers owning integration and acceptance tests;
 - teams testing session-oriented enterprise REST APIs;
-- teams that need business-readable Cucumber scenarios without giving up a
-  typed programmatic core.
+- teams that need a reliable typed core that runner adapters can use later.
 
 Business stakeholders may read scenarios and reports, but `0.1.0` is not a
 no-code product.
@@ -30,7 +29,7 @@ often accumulate bespoke code for:
 - per-scenario isolation and reliable resource cleanup;
 - status-specific success and error responses;
 - redacted failure diagnostics;
-- Cucumber lifecycle integration.
+- deterministic lifecycle and cleanup across reusable scenarios.
 
 Flowtract provides one coherent lifecycle for those concerns.
 
@@ -40,7 +39,7 @@ Flowtract does not attempt to replace every API client or testing platform. Its
 defensible initial wedge is:
 
 > TypeScript-first, schema-verified testing of authenticated, stateful REST
-> workflows, with a runner-neutral core and first-class Cucumber integration.
+> workflows through a robust runner-neutral core.
 
 The project competes through workflow correctness, developer diagnostics,
 secure defaults, and extension boundaries—not by matching every protocol or UI
@@ -56,8 +55,6 @@ feature of Postman, Karate, PactumJS, or Playwright.
 - Playwright HTTP transport through a public port;
 - built-in common authentication providers plus custom providers;
 - typed configuration;
-- a small CLI;
-- generic Cucumber onboarding steps and domain-step guidance;
 - deterministic cross-platform tests and consumer package proofs;
 - Apache-2.0 community governance.
 
@@ -75,6 +72,7 @@ The following MUST NOT delay `0.1.0`:
 - database verification;
 - schema-neutral validation adapters;
 - OpenAPI import/export;
+- Cucumber, CLI, generator, configuration-file loading, and command execution;
 - compatibility with unpublished prototype APIs;
 - paid or proprietary feature boundaries.
 

@@ -1,6 +1,6 @@
 # Flowtract Open-Source v0.1 Canonical Specification
 
-> **Status:** Gate 2 implemented locally; acceptance pending CI and review
+> **Status:** Gate 2 accepted; Gate 3 core-hardening specification in progress
 > **Product:** Flowtract
 > **Release target:** `0.1.0` developer preview
 > **Positioning:** Test contracts in motion.
@@ -22,9 +22,8 @@ The `0.1.0` release supports:
 - Playwright-backed HTTP execution behind a transport port;
 - scenario-local state, secrets, authentication, response history, and cleanup;
 - a runner-neutral programmatic API;
-- an optional Cucumber adapter;
-- a focused CLI and `create-flowtract` starter;
-- redacted diagnostics and standard Cucumber artifacts.
+- redacted in-memory diagnostics and stable errors;
+- a root-only ESM/CommonJS package with installed-consumer proof.
 
 The `0.1.0` release does not support GraphQL, SOAP, gRPC, WebSockets, SSE,
 multipart, binary streaming, database assertions, UI testing, load testing,
@@ -36,13 +35,16 @@ hosted services, or a low-code interface.
 2. [Current baseline and gaps](02-current-baseline-and-gaps.md)
 3. [Public API and execution model](03-public-api-and-execution-model.md)
 4. [Security, configuration, and artifacts](04-security-configuration-and-artifacts.md)
-5. [Packaging, CLI, and Cucumber](05-packaging-cli-and-cucumber.md)
+5. [Packaging and deferred adapters/tooling](05-packaging-cli-and-cucumber.md)
 6. [Testing and release gates](06-testing-and-release-gates.md)
 7. [Community and governance](07-community-and-governance.md)
 8. [Roadmap and success measures](08-roadmap-and-success-measures.md)
 9. [Gate 0 review and approval](09-gate-0-review-and-approval.md)
 10. [Gate 1.5 clean repository extraction](10-gate-1-5-clean-repository.md)
 11. [Gate 2 execution foundation](gate-2/README.md)
+12. [Gate 3 core production-candidate hardening](gate-3/README.md)
+13. [Deferred Cucumber and CLI design](../future/cucumber-cli/README.md)
+14. [Command-target feasibility](../future/command-target/README.md)
 
 ## Normative language
 
@@ -75,6 +77,9 @@ repository-transfer assumption with a reviewed clean extraction and completed
 public activation at `090ec2e`. The Gate 2 specification was approved for
 implementation on 2026-07-29 against signed revision `269b787` (the
 tree-identical DCO rewrite of `ca990a9`), including the close-scoped
-cleanup-client amendment. The implementation is locally
-proof-gated; pull-request review and the Windows/Ubuntu Node 22/24 matrix remain
-acceptance prerequisites. npm publication remains separately gated.
+cleanup-client amendment. Gate 2 was accepted through PR
+[#9](https://github.com/flowtract/flowtract/pull/9) and squash-merged as
+`cc30efe` on 2026-08-02 after semantic review and the Windows/Ubuntu Node 22/24
+matrix passed. Gate 3 now targets root-core production-candidate hardening and
+remains specification-only until its owner approval. Cucumber, CLI, command
+targeting, npm publication, and production readiness remain separately gated.

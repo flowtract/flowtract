@@ -17,12 +17,15 @@ The clean Flowtract repository currently provides:
 - dual ESM/CommonJS builds with declarations and source maps;
 - clean packed-package proofs for JavaScript and TypeScript consumers.
 
-The Gate 2 branch executes authenticated HTTP/HTTPS workflows and proves eight
-parallel session-isolated CRUD scenarios against an ephemeral in-process
-service. Cross-platform CI and pull-request review remain required before Gate
-2 acceptance. The previous prototype is retained in a private archived
-repository as historical behavioral evidence; it is not part of the public
-source tree or package dependency graph.
+The accepted Gate 2 runtime executes authenticated HTTP/HTTPS workflows and
+proves eight parallel session-isolated CRUD scenarios against an ephemeral
+in-process service. PR #9 passed semantic review and the protected Windows,
+Ubuntu, compiler, clean-clone, dependency, DCO, and CodeQL checks. Its accepted
+baseline is 94 tests, 93.67% statement coverage, 95.71% line coverage, 94.73%
+function coverage, 87.76% branch coverage, an 80-file archive, and TypeScript
+5.5.4/6.0.2/7.0.2 consumers. The previous prototype is retained in a private
+archived repository as historical behavioral evidence; it is not part of the
+public source tree or package dependency graph.
 
 ## Architectural gaps
 
@@ -53,10 +56,16 @@ The archived prototype lifecycle:
 Gate 0 added the license, governance policies, security workflows, and
 canonical specification. Gate 1 added package-consumer tests and a
 Windows/Ubuntu Node 22/24 CI definition. Gate 1.5 moved that foundation into a
-clean `flowtract/flowtract` repository. Gate 2 adds the execution foundation
+clean `flowtract/flowtract` repository. Gate 2 added the execution foundation
 without expanding into Cucumber, CLI, configuration-file loading, retry, or
 reporting. npm publication and trusted publishing remain future external
 actions.
+
+Gate 3 now targets core production-candidate proof: hostile-input and fault
+testing, lifecycle races, stress/soak evidence, macOS and peer-version
+compatibility, security closure, packaging, and release-quality root-runtime
+DX. Cucumber, CLI, configuration loading, generators, and command execution are
+deferred and require separate approved specifications.
 
 ## v0.1 Target
 

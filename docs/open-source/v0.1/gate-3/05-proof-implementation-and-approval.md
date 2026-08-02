@@ -1,0 +1,184 @@
+# Proof, Implementation, and Approval
+
+## Approval boundary
+
+This specification package is the Gate 3 deliverable. Runtime, dependency,
+test, documentation, package, and workflow implementation is not authorized
+until the repository owner approves an exact revision below.
+
+Approval authorizes only root-core hardening. It does not authorize Cucumber,
+configuration loading, command execution, CLI/generator work, package
+publication, or a production-ready claim.
+
+## Implementation sequence
+
+Use one Gate 3 implementation branch and one reviewable pull request with
+small signed commits.
+
+### Slice 1 — Baseline, dependency debt, and compatibility harness
+
+- reproduce the clean Gate 2 baseline;
+- remove the unused optional Cucumber peer;
+- update development `esbuild` to 0.28.1;
+- migrate ESLint to 10.8.0 with `@typescript-eslint` 8.65.0 and eliminate the
+  high transitive `brace-expansion` finding without suppressing lint scope;
+- add minimum/latest peer consumers and macOS/Node 24 CI;
+- lock the root export and compatibility snapshot.
+
+**Proof:** dependency, build, archive, root export, compiler, and installed
+consumer checks pass without a public-surface change.
+
+### Slice 2 — Hostile inputs, fault injection, and redaction
+
+- add fixed-seed property generators and replay support;
+- add the complete callback/transport/provider fault matrix;
+- exercise accessors, proxies, cycles, deep/large values, thrown primitives,
+  and non-extensible errors;
+- scan every error and diagnostic representation for generated secrets.
+
+**Proof:** 10,000 hostile cases and every failure phase remain bounded,
+redacted, stable, and cleanup-safe.
+
+### Slice 3 — Lifecycle races and resource conformance
+
+- add deterministic scheduling barriers;
+- exercise execute/close, abort/response, auth, and cleanup races 100 times;
+- add internal transport/provider ownership counters;
+- expand Playwright CRUD concurrency to at least 16 scenarios.
+
+**Proof:** all ownership balances, isolation assertions, and lifecycle outcomes
+pass with zero live resource.
+
+### Slice 4 — Stress, benchmark, and soak
+
+- add sequential and concurrent custom-transport stress profiles;
+- record a same-host Gate 2 performance baseline;
+- add `core:soak` with fixed seeds, resource accounting, forced-GC heap
+  samples, and machine-readable summary;
+- run the soak acceptance on Windows and Ubuntu Node 24.
+
+**Proof:** the quantitative reliability, performance, and soak requirements in
+Document 02 pass on the candidate.
+
+### Slice 5 — Core DX and package proof
+
+- document all root exports and accepted lifecycle/security boundaries;
+- implement the executable quick start and focused examples;
+- add the complete error/troubleshooting catalog;
+- extend packed ESM/CommonJS/TypeScript and peer-version consumers;
+- generate the untracked CycloneDX SBOM and publication dry run.
+
+**Proof:** clean consumers use only the tarball, all snippets compile/execute,
+and the archive contains only reviewed files.
+
+### Slice 6 — Cross-platform security closure
+
+- run Windows/Ubuntu Node 22/24 and macOS Node 24;
+- run compiler, clean-clone, CodeQL, Dependency Review, DCO, audit, secret,
+  package, and repository-integrity gates;
+- review the final diff against this specification and non-goals;
+- update the changelog and completion record only after all proof passes.
+
+**Proof:** every required check passes on one immutable final SHA with no open
+correctness, security, portability, resource, packaging, or documentation
+blocker.
+
+## Quantitative acceptance
+
+The final candidate must satisfy all of these:
+
+- at least 90% statements, lines, and functions and 85% branches;
+- existing Gate 1/Gate 2 cases plus every named Gate 3 case pass;
+- 100 schedules for each required lifecycle race family;
+- 1,000 sequential scenario cycles;
+- 64 concurrent custom-transport scenarios;
+- at least 16 concurrent Playwright authenticated CRUD scenarios;
+- at least 10,000 replayable hostile cases;
+- 15-minute/10,000-operation soak on Windows and Ubuntu Node 24;
+- 10,000-operation custom benchmark under 10 seconds and within 20% of the
+  same-host Gate 2 baseline;
+- normal QA and package proof each below 60 seconds under their documented
+  exclusions;
+- zero leaked resources, generated-secret occurrences, tracked mutations,
+  production vulnerabilities, and new branch CodeQL alerts.
+
+Coverage or timing thresholds, iterations, concurrency, redaction assertions,
+and platform lanes must not be weakened to accept a failing candidate.
+
+## Required final commands
+
+The implementation must expose stable repository scripts for the complete
+proof. Final local verification includes at least:
+
+```powershell
+npm ci --ignore-scripts
+npm run gate3:qa
+npm run type-matrix
+npm run clean-clone:check
+npm run core:soak
+npm audit --omit=dev --audit-level=high
+npm sbom --sbom-format cyclonedx
+npm run package:publish-dry-run
+git diff --check
+git status --short
+```
+
+`package:publish-dry-run` uses a temporary manifest that differs only by
+omitting `private`, runs npm with `--dry-run --tag next`, verifies the archive
+against package proof, and publishes nothing. SBOM and dry-run artifacts remain
+untracked. The cross-platform soak may be executed through manual
+release-blocking workflows, but its durable run URLs must identify the final
+candidate SHA.
+
+## Failure policy
+
+Correctness, security, portability, resource, packaging, compatibility, or
+documentation failures stop acceptance and produce a bounded remediation.
+Only a confirmed infrastructure failure may receive one unchanged rerun.
+Every candidate-changing push invalidates earlier candidate-specific evidence.
+
+## Specification approval
+
+The repository owner must confirm:
+
+- the core production-candidate meaning and production-ready non-claim;
+- the root-only API freeze and compatibility rules;
+- lifecycle, race, fault, resource, stress, performance, and soak contracts;
+- threat model, redaction, dependency, and supply-chain gates;
+- DX, package, platform, compiler, and peer-version profiles;
+- deferred Cucumber/CLI and command-target boundaries;
+- all explicit non-goals.
+
+| Field             | Value                                      |
+| ----------------- | ------------------------------------------ |
+| Decision          | Approved                                   |
+| Approved by       | Repository owner                           |
+| Approval date     | 2026-08-02                                 |
+| Approved revision | `2f9a50ca714916e91eb4e4b2266aa28c01da99e3` |
+| Authorization     | Root-core Gate 3 implementation only       |
+
+Semantic review corrected the development-audit inventory, locked the ESLint
+and esbuild remediation targets, made private-package publication rehearsal
+executable without publishing, and replaced a platform-sensitive heap trend
+rule with a bounded forced-GC comparison before approval.
+
+After approval, prepare a decision-preserving implementation plan against the
+approved SHA. Any required deviation stops work until an amended revision is
+approved.
+
+## Completion record
+
+This table remains pending until the implementation is accepted and merged:
+
+| Field                     | Value   |
+| ------------------------- | ------- |
+| Core production-candidate | Pending |
+| Accepted revision         | Pending |
+| Acceptance PR             | Pending |
+| Cross-platform proof      | Pending |
+| Soak/performance proof    | Pending |
+| Security proof            | Pending |
+| Package/compiler proof    | Pending |
+
+The project remains unpublished and not production ready after specification
+approval and throughout implementation.
