@@ -17,8 +17,8 @@
     "packages/*"
   ],
   "scripts": {
-    "format": "prettier --write \"packages/**/*.{ts,mts,js,mjs,json,md}\" \".github/**/*.{yml,yaml,md}\" \"docs/**/*.md\" \"scripts/**/*.mjs\" README.md CHANGELOG.md package.json",
-    "format:check": "prettier --check \"packages/**/*.{ts,mts,js,mjs,json,md}\" \".github/**/*.{yml,yaml,md}\" \"docs/**/*.md\" \"scripts/**/*.mjs\" README.md CHANGELOG.md package.json",
+    "format": "prettier --write \"packages/**/*.{ts,mts,js,mjs,json,md}\" \".github/**/*.{yml,yaml,md}\" \"docs/**/*.md\" \"scripts/**/*.mjs\" eslint.config.mjs README.md CHANGELOG.md package.json",
+    "format:check": "prettier --check \"packages/**/*.{ts,mts,js,mjs,json,md}\" \".github/**/*.{yml,yaml,md}\" \"docs/**/*.md\" \"scripts/**/*.mjs\" eslint.config.mjs README.md CHANGELOG.md package.json",
     "lint": "eslint packages/flowtract/src packages/flowtract/test --ext .ts",
     "type-check": "tsc -p packages/flowtract/tsconfig.json",
     "test": "vitest run --config packages/flowtract/vitest.config.mts",
@@ -34,13 +34,15 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
+    "@eslint/js": "^10.0.1",
     "@types/node": "^24.0.0",
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.65.0",
     "@typescript/native": "npm:typescript@^7.0.2",
     "@vitest/coverage-v8": "^4.1.10",
-    "esbuild": "^0.27.0",
-    "eslint": "^8.57.0",
+    "esbuild": "^0.28.1",
+    "eslint": "^10.8.0",
+    "fast-check": "^4.9.0",
     "prettier": "^3.2.4",
     "publint": "^0.3.22",
     "rimraf": "^5.0.5",
@@ -48,7 +50,7 @@
     "vitest": "^4.1.10"
   },
   "engines": {
-    "node": "^22.0.0 || ^24.0.0",
+    "node": "^22.13.0 || ^24.0.0",
     "npm": ">=10.0.0"
   }
 }

@@ -1,6 +1,6 @@
 # Gate 3 — Core Production-Candidate Hardening
 
-> **Status:** Draft specification; implementation is not authorized
+> **Status:** Approved; implementation authorized against revision `2f9a50ca714916e91eb4e4b2266aa28c01da99e3`
 > **Baseline:** Gate 2 merge `cc30efec286c595d185644096fe8a17c0771591d`
 > **Technical target:** Root-only core production-candidate proof
 > **Product claim:** Unpublished and not production ready
@@ -15,9 +15,10 @@ means the root runtime has passed the profiles and operational proofs in this
 package. It is not a Flowtract production-readiness claim. Production readiness
 still requires sustained external operation and an exercised support policy.
 
-This package becomes normative only after repository-owner approval is
-recorded against an exact revision. No Gate 3 runtime, dependency, package,
-test, or workflow implementation may begin from this draft.
+This package is normative because repository-owner approval is recorded in
+the approval document against the exact substantive revision. Authorization
+is limited to root-core Gate 3 implementation and does not authorize a
+production-ready claim.
 
 ## Documents
 

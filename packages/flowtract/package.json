@@ -47,17 +47,10 @@
     "type-matrix": "node scripts/type-matrix.mjs"
   },
   "peerDependencies": {
-    "@cucumber/cucumber": "^13.0.0",
     "playwright": "^1.62.0",
     "zod": "^4.0.0"
   },
-  "peerDependenciesMeta": {
-    "@cucumber/cucumber": {
-      "optional": true
-    }
-  },
   "devDependencies": {
-    "@cucumber/cucumber": "^13.2.0",
     "playwright": "^1.62.0",
     "selfsigned": "^5.5.0",
     "zod": "^4.4.3"

@@ -20,6 +20,7 @@ const requiredPaths = [
 const forbiddenRoots = ['.gap', '.vscode', 'data', 'features', 'mock-server', 'src', 'reports'];
 
 const forbiddenDependencies = [
+  '@cucumber/cucumber',
   '@playwright/test',
   '@types/jsonpath',
   'cucumber-html-reporter',
@@ -95,6 +96,30 @@ for (const dependency of forbiddenDependencies) {
   }
 }
 
+const flowtractPackage = JSON.parse(
+  await readFile(join(root, 'packages/flowtract/package.json'), 'utf8')
+);
+const flowtractExports = Object.keys(flowtractPackage.exports ?? {});
+if (flowtractExports.length !== 1 || flowtractExports[0] !== '.') {
+  throw new Error('The flowtract package must expose only its root entry point.');
+}
+if (flowtractPackage.bin !== undefined) {
+  throw new Error('The flowtract package must not expose a CLI binary during Gate 3.');
+}
+
+for (const path of packagePaths) {
+  const value = JSON.parse(await readFile(join(root, path), 'utf8'));
+  const allDependencies = new Set([
+    ...Object.keys(value.dependencies ?? {}),
+    ...Object.keys(value.devDependencies ?? {}),
+    ...Object.keys(value.optionalDependencies ?? {}),
+    ...Object.keys(value.peerDependencies ?? {})
+  ]);
+  if (allDependencies.has('@cucumber/cucumber')) {
+    throw new Error(`Cucumber coupling must not exist during Gate 3: ${path}`);
+  }
+}
+
 async function collectFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = [];
@@ -124,6 +149,13 @@ for (const path of sourceFiles) {
 
 if (await exists('data/parts.json')) {
   throw new Error('Protected prototype fixture must not exist in Flowtract.');
+}
+
+const generatedEvidence = (await collectFiles(root))
+  .map(path => relative(root, path).replaceAll('\\', '/'))
+  .filter(path => /(^|\/)(?:sbom|bom)(?:[.-].*)?\.(?:json|xml)$/iu.test(path));
+if (generatedEvidence.length > 0) {
+  throw new Error(`Generated SBOM evidence must remain untracked: ${generatedEvidence.join(', ')}`);
 }
 
 console.log(
