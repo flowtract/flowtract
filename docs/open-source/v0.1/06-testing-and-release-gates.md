@@ -52,7 +52,7 @@ seconds under their documented exclusions. Soak execution is separate.
 
 ## Required matrix
 
-Release-blocking for Gate 3:
+The accepted Gate 3 profile included:
 
 - Ubuntu latest, Node 22 and 24;
 - Windows latest, Node 22 and 24;
@@ -81,13 +81,16 @@ interpolation, cleanup, redaction, diagnostics, and authenticated CRUD proof.
 
 ### Gate 3 — core production-candidate hardening
 
-The root core must pass the approved compatibility, hostile-input, fault,
-lifecycle, stress, soak, security, packaging, and DX profiles. No adapter, CLI,
-command target, publication, or production-ready claim is included.
+Accepted through PR #11 at `9e6c991`: the root core passed the approved
+compatibility, hostile-input, fault, lifecycle, stress, soak, security,
+packaging, and DX profiles. The accepted evidence includes 134 tests, the
+84-file archive, the TypeScript and peer matrices, and exact-SHA Windows and
+Ubuntu soak proof. No adapter, CLI, command target, publication, or
+production-ready claim was included.
 
 ### Gate 4 — developer preview and external evaluation
 
-After Gate 3 acceptance, a separate approved action may publish a developer
+This is now the next gate. A separate approved action may publish a developer
 preview with provenance, deploy documentation, and begin external design-partner
 evaluation.
 

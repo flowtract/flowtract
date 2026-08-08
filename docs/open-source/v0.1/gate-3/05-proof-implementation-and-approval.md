@@ -168,17 +168,50 @@ approved.
 
 ## Completion record
 
-This table remains pending until the implementation is accepted and merged:
+Gate 3 was accepted and squash-merged on 2026-08-02. The accepted merge tree is
+identical to the final reviewed candidate tree.
 
-| Field                     | Value   |
-| ------------------------- | ------- |
-| Core production-candidate | Pending |
-| Accepted revision         | Pending |
-| Acceptance PR             | Pending |
-| Cross-platform proof      | Pending |
-| Soak/performance proof    | Pending |
-| Security proof            | Pending |
-| Package/compiler proof    | Pending |
+| Field                     | Recorded result                                                                                                                                                                                                                                                                                |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Core production-candidate | Accepted                                                                                                                                                                                                                                                                                       |
+| Approved specification    | `2f9a50ca714916e91eb4e4b2266aa28c01da99e3`                                                                                                                                                                                                                                                     |
+| Final candidate           | `9e56434e60bdd538968d9e1c06b1fdb07528e3a9`                                                                                                                                                                                                                                                     |
+| Accepted merge revision   | `9e6c99133a923565eda38548427630b9487807f8`                                                                                                                                                                                                                                                     |
+| Acceptance PR             | [PR #11](https://github.com/flowtract/flowtract/pull/11)                                                                                                                                                                                                                                       |
+| Approval and merge date   | 2026-08-02                                                                                                                                                                                                                                                                                     |
+| Cross-platform proof      | [PR candidate CI `30756515545`](https://github.com/flowtract/flowtract/actions/runs/30756515545) and [post-merge CI `30757454947`](https://github.com/flowtract/flowtract/actions/runs/30757454947)                                                                                            |
+| Soak/performance proof    | [Exact-SHA acceptance `30756617172`](https://github.com/flowtract/flowtract/actions/runs/30756617172)                                                                                                                                                                                          |
+| Security proof            | [PR CodeQL `30756515490`](https://github.com/flowtract/flowtract/actions/runs/30756515490), [post-merge CodeQL `30757454777`](https://github.com/flowtract/flowtract/actions/runs/30757454777), and [Scorecard `30757454766`](https://github.com/flowtract/flowtract/actions/runs/30757454766) |
+| Package/compiler proof    | 84 approved files; ESM/CommonJS; TypeScript 5.5.4, 6.0.2, and 7.0.2; minimum/latest reviewed Zod and Playwright peers                                                                                                                                                                          |
+| Test and coverage proof   | 134 tests; 90.84% statements, 94.00% lines, 96.09% functions, and 85.53% branches                                                                                                                                                                                                              |
 
-The project remains unpublished and not production ready after specification
-approval and throughout implementation.
+The final candidate passed 10,000 fixed-seed hostile/property cases, 400
+deterministic lifecycle-race schedules, 1,000 sequential scenario cycles, 64
+concurrent custom-transport scenarios, and 16 concurrent authenticated
+Playwright CRUD scenarios.
+
+The exact-SHA acceptance ran for 900.077 seconds and 18,938 operations on
+Ubuntu, and 900.096 seconds and 18,590 operations on Windows. Both lanes
+reported zero unexpected failures, generated-secret occurrences, or live
+resources. The candidate benchmark completed in 89.222 milliseconds on Ubuntu
+at 1.027 times the same-host Gate 2 baseline, and in 172.267 milliseconds on
+Windows at 0.954 times that baseline.
+
+Full-development and production audits, DCO, Dependency Review, CycloneDX SBOM
+validation, and the non-publishing package rehearsal passed. Branch-filtered
+queries recorded zero open CodeQL alerts on both the final candidate and the
+accepted `main` revision. Five older OpenSSF Scorecard advisory findings,
+created on 2026-07-28, remain visible in repository code scanning; they are not
+new Gate 3 CodeQL findings and this record does not describe them as closed.
+
+On 2026-08-08, a later registry advisory refresh identified high-severity
+development-only findings in locked transitive `brace-expansion` and `nanoid`
+versions. [PR #15](https://github.com/flowtract/flowtract/pull/15) updated only
+those lockfile entries and merged as `63386a5`; full-development and production
+audits returned to zero without a manifest, runtime, package, or public-contract
+change.
+
+This is a bounded root-core technical verdict. The package remains private and
+unpublished, and Flowtract is not production or enterprise ready. Gate 4
+developer-preview publication and external evaluation remain separately
+authorized future work.

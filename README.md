@@ -1,7 +1,8 @@
 # Flowtract
 
-> **Developer preview:** Flowtract is under active development and is not yet
-> published or claimed as production- or enterprise-ready.
+> **Core production-candidate proof accepted:** Flowtract remains under active
+> development and is not yet published or claimed as production- or
+> enterprise-ready.
 
 **Test contracts in motion.**
 
@@ -9,7 +10,8 @@ Flowtract is an Apache-2.0 TypeScript framework for schema-verified, stateful
 REST API workflows. It is designed for QA engineers, SDETs, and backend teams
 testing authenticated APIs whose meaningful behavior spans multiple requests.
 
-The Gate 3 core production-candidate implementation now provides:
+The Gate 3 core production-candidate proof accepted through
+[PR #11](https://github.com/flowtract/flowtract/pull/11) now provides:
 
 - explicit `defineOperation` contracts using Zod 4 public APIs;
 - typed request inputs and transformed outputs;
@@ -21,14 +23,16 @@ The Gate 3 core production-candidate implementation now provides:
 - bounded interpolation, secret tracking, and redacted diagnostics;
 - deterministic cleanup through a close-scoped restricted client;
 - dual ESM/CommonJS builds with declarations and source maps;
-- clean package-consumer proofs across TypeScript 5.5, 6.0, and 7.0.
+- clean package-consumer proofs across TypeScript 5.5, 6.0, and 7.0;
 - hostile-input and fault containment with 10,000 fixed-seed property cases;
 - deterministic lifecycle-race, resource, stress, benchmark, and soak proof;
 - reviewed peer profiles, macOS CI, SBOM, and publication-dry-run proof;
 - executable packed documentation and IntelliSense coverage for every root export.
 
-Cucumber integration, the CLI, configuration-file loading, retries, reporting,
-and npm publication remain future gates. See the
+Cucumber integration, the CLI, configuration-file loading, generators, command
+targeting, retries, reporting, and npm publication remain future gates. Gate 4
+developer-preview publication and external evaluation is next, subject to a
+separate approved specification. See the
 [canonical v0.1 specification](docs/open-source/v0.1/README.md) for implemented
 behavior, target behavior, and non-goals.
 

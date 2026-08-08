@@ -37,7 +37,7 @@ migration guidance.
   scenario isolation, cleanup I/O, TLS policy, timeout/abort, and disposal.
 - Gate 2 package consumers, compiler-matrix declarations, coverage thresholds,
   repository checks, and the `gate2:qa` compatibility gate.
-- Draft Gate 3 core production-candidate specification covering lifecycle
+- Approved Gate 3 core production-candidate specification covering lifecycle
   races, fault injection, hostile inputs, stress, soak, compatibility,
   security, packaging, and root-runtime developer experience.
 - Non-authorizing future design records for deferred Cucumber/CLI work and a
@@ -54,6 +54,10 @@ migration guidance.
   non-publishing 84-file publication rehearsal.
 - Gate 3 QA, macOS/Node 24 CI, supply-chain/peer compatibility CI, and an exact-SHA
   manual Windows/Ubuntu acceptance workflow.
+- Accepted Gate 3 core production-candidate proof through PR #11 at `9e6c991`,
+  including 134 tests, accepted coverage, an 84-file archive, compiler and peer
+  matrices, cross-platform soak, zero new CodeQL alerts, and post-merge CI,
+  CodeQL, and Scorecard evidence.
 
 ### Fixed
 
@@ -69,14 +73,20 @@ migration guidance.
   connection failures, repeated headers, declared error statuses, and bounds.
 - Remove the unused Cucumber package coupling and remediate all full-development
   audit findings by moving to ESLint 10.8.0 and esbuild 0.28.1.
+- Refresh locked transitive `brace-expansion` and `nanoid` development packages
+  after later advisories, restoring zero full-development audit findings without
+  changing the manifest or runtime package.
 
 ### Current limitations
 
-- Gate 2 is accepted at `cc30efe`; Gate 3 core hardening is implemented on a
-  review candidate but remains pending cross-platform, soak, security, and
-  repository-owner semantic acceptance.
+- Gate 3 core production-candidate proof is accepted at `9e6c991`; Gate 4
+  developer-preview publication and external evaluation remains separately
+  gated.
 - Cucumber, CLI, generator, configuration discovery, command execution, and
   artifact behavior are deferred future designs and are not part of the `0.1`
   root-package compatibility promise.
 - The legacy prototype is retained privately as historical behavioral evidence.
-- No npm package or production-ready release exists.
+- No npm package or production- or enterprise-ready release exists. A
+  production-ready claim still requires at least three teams operating
+  Flowtract in production for at least 90 days and exercised support and
+  compatibility policies.

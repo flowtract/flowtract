@@ -1,6 +1,6 @@
 # Gate 3 — Core Production-Candidate Hardening
 
-> **Status:** Approved; implementation authorized against revision `2f9a50ca714916e91eb4e4b2266aa28c01da99e3`
+> **Status:** Accepted through PR #11 at merge revision `9e6c99133a923565eda38548427630b9487807f8`
 > **Baseline:** Gate 2 merge `cc30efec286c595d185644096fe8a17c0771591d`
 > **Technical target:** Root-only core production-candidate proof
 > **Product claim:** Unpublished and not production ready
@@ -16,8 +16,11 @@ package. It is not a Flowtract production-readiness claim. Production readiness
 still requires sustained external operation and an exercised support policy.
 
 This package is normative because repository-owner approval is recorded in
-the approval document against the exact substantive revision. Authorization
-is limited to root-core Gate 3 implementation and does not authorize a
+the approval document against the exact substantive revision. The approved
+implementation was accepted through [PR #11](https://github.com/flowtract/flowtract/pull/11),
+with its durable evidence recorded in the
+[completion record](05-proof-implementation-and-approval.md#completion-record).
+Acceptance is limited to the root-core Gate 3 verdict and does not authorize a
 production-ready claim.
 
 ## Documents
@@ -49,9 +52,9 @@ execution is considered separately in the
 [command-target feasibility brief](../../future/command-target/README.md).
 Neither document authorizes implementation.
 
-## Completion boundary
+## Accepted completion boundary
 
-Gate 3 is complete only when:
+Gate 3 completed after:
 
 - the approved specification revision is implemented without scope expansion;
 - lifecycle, fault, hostile-input, stress, soak, compatibility, packaging,
@@ -62,8 +65,9 @@ Gate 3 is complete only when:
   documentation blocker remains;
 - the completion record names the final candidate and durable evidence.
 
-Completion does not publish a package, add an adapter or CLI, or authorize a
-production-ready claim.
+Completion did not publish a package, add an adapter or CLI, or authorize a
+production-ready claim. Gate 4 developer-preview publication and external
+evaluation is the next separately approved gate.
 
 ## Explicit non-goals
 

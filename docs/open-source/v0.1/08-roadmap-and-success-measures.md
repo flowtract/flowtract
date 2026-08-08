@@ -11,23 +11,25 @@ The roadmap is ordered by proof, not calendar dates.
   repository;
 - Gate 2: immutable runtime, transport, scenario lifecycle, auth, state,
   interpolation, cleanup, redaction, diagnostics, and parallel HTTP proof.
+- Gate 3: accepted root-core compatibility, hostile-input, fault, lifecycle,
+  resource, stress, benchmark, soak, security, packaging, and DX proof.
 
-### Gate 3 — core production-candidate hardening
+### Gate 3 — accepted core production-candidate hardening
 
-- freeze the root compatibility boundary;
-- prove hostile inputs and every external failure phase;
-- prove deterministic lifecycle races and resource ownership;
-- add stress, benchmark, and Windows/Ubuntu soak evidence;
-- add macOS and minimum/latest peer compatibility;
-- complete root-runtime DX, package, SBOM, and security proof.
+- froze the root compatibility boundary;
+- proved hostile inputs and every external failure phase;
+- proved deterministic lifecycle races and resource ownership;
+- added stress, benchmark, and Windows/Ubuntu soak evidence;
+- added macOS and minimum/latest peer compatibility;
+- completed root-runtime DX, package, SBOM, and security proof.
 
-Gate 3 may produce the technical verdict `Core production-candidate proof:
-Passed`. It does not publish a package or claim the product is production
-ready.
+Gate 3 produced the technical verdict `Core production-candidate proof:
+Passed` at `9e6c991`. It did not publish a package or claim the product is
+production ready.
 
 ### Gate 4 — developer preview and external evaluation
 
-Subject to separate authorization:
+This is the next gate, subject to separate specification and authorization:
 
 - publish the root package with provenance and documented limitations;
 - deploy documentation and executable examples;
