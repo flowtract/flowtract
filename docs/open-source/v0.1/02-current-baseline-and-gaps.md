@@ -17,15 +17,20 @@ The clean Flowtract repository currently provides:
 - dual ESM/CommonJS builds with declarations and source maps;
 - clean packed-package proofs for JavaScript and TypeScript consumers.
 
-The accepted Gate 2 runtime executes authenticated HTTP/HTTPS workflows and
-proves eight parallel session-isolated CRUD scenarios against an ephemeral
-in-process service. PR #9 passed semantic review and the protected Windows,
-Ubuntu, compiler, clean-clone, dependency, DCO, and CodeQL checks. Its accepted
-baseline is 94 tests, 93.67% statement coverage, 95.71% line coverage, 94.73%
-function coverage, 87.76% branch coverage, an 80-file archive, and TypeScript
-5.5.4/6.0.2/7.0.2 consumers. The previous prototype is retained in a private
-archived repository as historical behavioral evidence; it is not part of the
-public source tree or package dependency graph.
+The accepted Gate 3 root core executes authenticated HTTP/HTTPS workflows and
+adds hostile-input containment, deterministic lifecycle-race proof, resource
+accounting, stress, benchmark, soak, peer-version, documentation, and
+supply-chain evidence. PR #11 passed semantic review and the protected Windows,
+Ubuntu, macOS, compiler, clean-clone, dependency, DCO, and CodeQL checks. Its
+accepted baseline is 134 tests, 90.84% statement coverage, 94.00% line coverage,
+96.09% function coverage, 85.53% branch coverage, an 84-file archive, and
+TypeScript 5.5.4/6.0.2/7.0.2 consumers. The exact-SHA acceptance also proved
+15-minute Windows and Ubuntu soak profiles with zero unexpected failures,
+generated-secret occurrences, or live resources.
+
+The previous prototype is retained in a private archived repository as
+historical behavioral evidence; it is not part of the public source tree or
+package dependency graph.
 
 ## Architectural gaps
 
@@ -61,11 +66,18 @@ without expanding into Cucumber, CLI, configuration-file loading, retry, or
 reporting. npm publication and trusted publishing remain future external
 actions.
 
-Gate 3 now targets core production-candidate proof: hostile-input and fault
-testing, lifecycle races, stress/soak evidence, macOS and peer-version
-compatibility, security closure, packaging, and release-quality root-runtime
-DX. Cucumber, CLI, configuration loading, generators, and command execution are
-deferred and require separate approved specifications.
+Gate 3 core production-candidate proof was accepted at `9e6c991`. Gate 4 is the
+next gate: separately approved developer-preview publication with provenance,
+documentation deployment, and external evaluation. The package remains private
+and unpublished. Cucumber, CLI, configuration loading, generators, retry,
+reporting, and command execution are deferred and require separate approved
+specifications.
+
+The remaining production-readiness gap is external and operational evidence:
+released-artifact use across at least two minor releases, at least three teams
+operating Flowtract in production for at least 90 days, exercised support,
+compatibility, deprecation, and security-response policies, and no open major
+correctness or security blocker.
 
 ## v0.1 Target
 

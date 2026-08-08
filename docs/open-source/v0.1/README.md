@@ -1,6 +1,6 @@
 # Flowtract Open-Source v0.1 Canonical Specification
 
-> **Status:** Gate 2 accepted; approved Gate 3 implementation candidate in progress
+> **Status:** Gate 3 core production-candidate proof accepted; Gate 4 pending separate approval
 > **Product:** Flowtract
 > **Release target:** `0.1.0` developer preview
 > **Positioning:** Test contracts in motion.
@@ -80,8 +80,10 @@ tree-identical DCO rewrite of `ca990a9`), including the close-scoped
 cleanup-client amendment. Gate 2 was accepted through PR
 [#9](https://github.com/flowtract/flowtract/pull/9) and squash-merged as
 `cc30efe` on 2026-08-02 after semantic review and the Windows/Ubuntu Node 22/24
-matrix passed. Gate 3 targets root-core production-candidate hardening and was
-approved for implementation against substantive revision `2f9a50c` on
-2026-08-02. Its candidate still requires immutable cross-platform, soak,
-security, and semantic acceptance before merge. Cucumber, CLI, command
-targeting, npm publication, and production readiness remain separately gated.
+matrix passed. Gate 3 was approved against substantive revision `2f9a50c` and
+accepted through [PR #11](https://github.com/flowtract/flowtract/pull/11) at
+merge revision `9e6c991` on 2026-08-02 after immutable Windows/Ubuntu soak,
+Windows/Ubuntu/macOS compatibility, package, security, and semantic acceptance.
+Gate 4 developer-preview publication and external evaluation is next, subject
+to a separate approved specification. Cucumber, CLI, command targeting, npm
+publication, and production readiness remain separately gated.

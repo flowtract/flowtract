@@ -1,6 +1,6 @@
 # Gate 2 — Execution Foundation
 
-> **Status:** Implemented locally; acceptance pending CI and review
+> **Status:** Accepted through PR #9 at merge revision `cc30efec286c595d185644096fe8a17c0771591d`
 >
 > **Gate:** 2 of the Flowtract `0.1.0` developer preview
 >
