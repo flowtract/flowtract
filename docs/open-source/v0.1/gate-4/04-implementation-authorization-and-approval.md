@@ -81,7 +81,7 @@ implementation it governs.
    and revoke the bootstrap token.
 9. Obtain explicit authorization for final `0.1.0` publication.
 10. Publish through OIDC, verify, create the tag/release, deploy docs, and write
-   the completion record.
+    the completion record.
 
 Publication is never bundled into PR merge and is never inferred from green CI.
 
@@ -114,13 +114,13 @@ because it changes no runtime, dependency, package, workflow, or test.
 
 ## Approval record
 
-| Field             | Value                                  |
-| ----------------- | -------------------------------------- |
-| Decision          | Pending                                |
-| Approved by       | Pending                                |
-| Approval date     | Pending                                |
-| Approved revision | Pending                                |
-| Authorization     | Gate 4A repository implementation only |
+| Field             | Value                                      |
+| ----------------- | ------------------------------------------ |
+| Decision          | Approved                                   |
+| Approved by       | `iamprasanna-dev`                          |
+| Approval date     | 2026-08-09                                 |
+| Approved revision | `72fa3dfbffd666d5d8d921fa089b1476ed4ba4d3` |
+| Authorization     | Gate 4A repository implementation only     |
 
 The repository owner must review:
 
@@ -132,9 +132,9 @@ The repository owner must review:
 - market-gap claims and Gate 4B handoff;
 - the parallel production-readiness track and explicit non-goals.
 
-Runtime implementation, publication, or external configuration cannot begin
-until an exact specification revision is approved. Publication still requires
-the later explicit authorizations described above.
+Runtime, package, documentation, and workflow implementation may proceed
+against the approved revision. Publication and external configuration still
+require the later explicit authorizations described above.
 
 ## Completion record
 
