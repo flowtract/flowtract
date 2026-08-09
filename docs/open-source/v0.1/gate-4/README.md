@@ -1,6 +1,6 @@
 # Gate 4 — Developer Preview and Market Validation
 
-> **Status:** Draft; awaiting repository-owner approval
+> **Status:** Specification amendment awaiting repository-owner approval
 > **Baseline:** Gate 3 completion merge `d08c13055178d23cc4a381afccfff86907c11c68`
 > **Gate 4A target:** Publish and prove `flowtract@0.1.0` as a developer preview
 > **Gate 4B target:** Launch external market-gap evaluation after publication
