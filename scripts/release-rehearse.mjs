@@ -53,6 +53,7 @@ try {
   const tarball = path.join(output, archive.filename);
   const integrity = await sha512(tarball);
   if (integrity !== archive.integrity) throw new Error('Tarball SHA-512 differs from npm pack.');
+  const npmVersion = runNpm(['--version'], { capture: true }).trim();
   const sbomText = runNpm(['sbom', '--sbom-format', 'cyclonedx'], { capture: true });
   const sbom = JSON.parse(sbomText);
   if (sbom.bomFormat !== 'CycloneDX') throw new Error('Rehearsal SBOM was not CycloneDX.');
@@ -68,7 +69,7 @@ try {
     files,
     exports,
     node: process.version,
-    npm: contract.npm
+    npm: npmVersion
   };
   await writeFile(
     path.join(output, 'release-evidence.json'),
