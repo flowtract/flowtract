@@ -58,6 +58,9 @@ migration guidance.
   including 134 tests, accepted coverage, an 84-file archive, compiler and peer
   matrices, cross-platform soak, zero new CodeQL alerts, and post-merge CI,
   CodeQL, and Scorecard evidence.
+- Draft Gate 4A specification for controlled bootstrap publication, npm trusted
+  publishing and provenance, registry-backed consumers, deployed documentation,
+  release recovery, and the Gate 4B market-validation handoff.
 
 ### Fixed
 

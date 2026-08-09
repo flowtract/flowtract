@@ -66,18 +66,23 @@ without expanding into Cucumber, CLI, configuration-file loading, retry, or
 reporting. npm publication and trusted publishing remain future external
 actions.
 
-Gate 3 core production-candidate proof was accepted at `9e6c991`. Gate 4 is the
-next gate: separately approved developer-preview publication with provenance,
-documentation deployment, and external evaluation. The package remains private
-and unpublished. Cucumber, CLI, configuration loading, generators, retry,
-reporting, and command execution are deferred and require separate approved
-specifications.
+Gate 3 core production-candidate proof was accepted at `9e6c991`. Gate 4A is
+the next gate: separately approved developer-preview publication with
+provenance, registry-backed consumers, recovery procedures, and documentation
+deployment. Gate 4B begins external market validation after publication. The
+package remains private and unpublished. Cucumber, CLI, configuration loading,
+generators, retry, reporting, and command execution are deferred and require
+separate approved specifications.
 
 The remaining production-readiness gap is external and operational evidence:
 released-artifact use across at least two minor releases, at least three teams
 operating Flowtract in production for at least 90 days, exercised support,
 compatibility, deprecation, and security-response policies, and no open major
 correctness or security blocker.
+
+That production-readiness track gates only the production-ready label. It runs
+in parallel and does not block Gate 4B market validation or separately approved
+evidence-driven capability work.
 
 ## v0.1 Target
 

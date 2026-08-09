@@ -27,16 +27,29 @@ Gate 3 produced the technical verdict `Core production-candidate proof:
 Passed` at `9e6c991`. It did not publish a package or claim the product is
 production ready.
 
-### Gate 4 — developer preview and external evaluation
+### Gate 4A — developer preview publication
 
-This is the next gate, subject to separate specification and authorization:
+This is the next gate, subject to its separate specification and explicit
+release authorization:
 
 - publish the root package with provenance and documented limitations;
 - deploy documentation and executable examples;
+- prove clean consumers against the real registry artifact;
+- establish release, deprecation, rollback, and incident procedures;
+- publish a reproducible market-gap demonstration pack.
+
+### Gate 4B — external market validation
+
+After Gate 4A publication:
+
 - recruit at least five real-world repositories/design partners;
-- measure first-success time, defects, support load, and missing core
-  capabilities;
-- resolve release-blocking user evidence before expanding adapters.
+- measure first-success time, repeated use, defects, support load, and missing
+  core capabilities;
+- verify that authenticated stateful workflow contracts solve meaningful work;
+- use evidence to authorize or reject later feature gates.
+
+Gate 4B is not a prerequisite for publishing `0.1.0`. It is the evidence source
+for product direction after publication.
 
 ### Later evidence-gated capabilities
 
@@ -64,7 +77,14 @@ After publication, measure:
 - zero unresolved critical/high security findings;
 - compatibility and migration evidence across actual releases.
 
-## Production-ready gate
+## Parallel production-readiness track
+
+Production maturity is not a serial blocker for product discovery or feature
+development. Compatibility, support, incident, released-artifact, and
+production-operation evidence accumulates while separately approved capability
+and market-validation work continues.
+
+The criteria below gate only the `production ready` label.
 
 Flowtract may claim production ready only when:
 

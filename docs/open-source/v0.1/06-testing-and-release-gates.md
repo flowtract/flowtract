@@ -88,22 +88,31 @@ packaging, and DX profiles. The accepted evidence includes 134 tests, the
 Ubuntu soak proof. No adapter, CLI, command target, publication, or
 production-ready claim was included.
 
-### Gate 4 — developer preview and external evaluation
+### Gate 4A — developer preview publication
 
-This is now the next gate. A separate approved action may publish a developer
-preview with provenance, deploy documentation, and begin external design-partner
-evaluation.
+This is now the next gate. Its separate specification may authorize repository
+release engineering, a controlled bootstrap prerelease, trusted publication of
+`flowtract@0.1.0`, registry-backed consumers, provenance, and deployed
+documentation. Specification approval does not itself authorize publication.
+
+### Gate 4B — external market validation
+
+After Gate 4A publication, recruit real TypeScript QA/backend repositories,
+measure first success and repeated workflow use, and resolve market-validation
+blockers. Gate 4B guides later capability gates but does not block the initial
+developer-preview publication.
 
 ### Later evidence-gated capabilities
 
 Cucumber, project CLI, generator, configuration loading, command execution,
 additional protocols, and richer reporting require separate approved gates.
 
-### Production ready
+### Production-ready evidence track
 
 Production readiness requires sustained production evidence: at least three
 teams for at least 90 days, exercised support/compatibility policy, and no open
-major correctness or security blocker.
+major correctness or security blocker. This track runs in parallel and gates
+only a production-ready claim; it does not freeze feature development.
 
 ## Failure policy
 

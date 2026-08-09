@@ -100,8 +100,9 @@ proof.
 
 ## Design partners
 
-Before `0.1.0`, recruit five TypeScript QA/backend teams. Partners receive no
-private feature entitlement. Their role is to:
+After Gate 4A publishes `0.1.0`, Gate 4B recruits at least five TypeScript
+QA/backend teams. Partners receive no private feature entitlement. Their role
+is to:
 
 - run the starter without maintainer intervention;
 - model one real authenticated workflow;
@@ -111,6 +112,10 @@ private feature entitlement. Their role is to:
 
 Feedback that expands protocols or product categories is recorded for future
 evaluation and does not automatically enter `0.1`.
+
+Gate 4B evidence may authorize later capability gates before the separate
+production-ready evidence track completes. The three-team/90-day criterion
+gates only a production-ready claim.
 
 ## Branding and project identity
 

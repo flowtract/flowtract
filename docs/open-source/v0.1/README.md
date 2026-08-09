@@ -1,6 +1,6 @@
 # Flowtract Open-Source v0.1 Canonical Specification
 
-> **Status:** Gate 3 core production-candidate proof accepted; Gate 4 pending separate approval
+> **Status:** Gate 3 accepted; Gate 4A publication specification under review
 > **Product:** Flowtract
 > **Release target:** `0.1.0` developer preview
 > **Positioning:** Test contracts in motion.
@@ -43,8 +43,9 @@ hosted services, or a low-code interface.
 10. [Gate 1.5 clean repository extraction](10-gate-1-5-clean-repository.md)
 11. [Gate 2 execution foundation](gate-2/README.md)
 12. [Gate 3 core production-candidate hardening](gate-3/README.md)
-13. [Deferred Cucumber and CLI design](../future/cucumber-cli/README.md)
-14. [Command-target feasibility](../future/command-target/README.md)
+13. [Gate 4 developer preview and market validation](gate-4/README.md)
+14. [Deferred Cucumber and CLI design](../future/cucumber-cli/README.md)
+15. [Command-target feasibility](../future/command-target/README.md)
 
 ## Normative language
 
@@ -84,6 +85,8 @@ matrix passed. Gate 3 was approved against substantive revision `2f9a50c` and
 accepted through [PR #11](https://github.com/flowtract/flowtract/pull/11) at
 merge revision `9e6c991` on 2026-08-02 after immutable Windows/Ubuntu soak,
 Windows/Ubuntu/macOS compatibility, package, security, and semantic acceptance.
-Gate 4 developer-preview publication and external evaluation is next, subject
-to a separate approved specification. Cucumber, CLI, command targeting, npm
-publication, and production readiness remain separately gated.
+Gate 4A developer-preview publication is now specified separately from Gate 4B
+external market validation. Production-readiness evidence runs in parallel and
+gates only the production-ready label; it does not block evidence-driven
+capability work. Cucumber, CLI, command targeting, npm publication, and every
+runtime expansion remain separately authorized.
