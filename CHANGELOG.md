@@ -58,9 +58,11 @@ migration guidance.
   including 134 tests, accepted coverage, an 84-file archive, compiler and peer
   matrices, cross-platform soak, zero new CodeQL alerts, and post-merge CI,
   CodeQL, and Scorecard evidence.
-- Draft Gate 4A specification for controlled bootstrap publication, npm trusted
+- Approved Gate 4A specification and implementation candidate for controlled bootstrap publication, npm trusted
   publishing and provenance, registry-backed consumers, deployed documentation,
   release recovery, and the Gate 4B market-validation handoff.
+- Exact package-file and root-export snapshots, fail-closed release rehearsal,
+  registry acceptance, Pages deployment, and three market-gap demonstrations.
 
 ### Fixed
 
@@ -82,9 +84,8 @@ migration guidance.
 
 ### Current limitations
 
-- Gate 3 core production-candidate proof is accepted at `9e6c991`; Gate 4
-  developer-preview publication and external evaluation remains separately
-  gated.
+- Gate 3 core production-candidate proof is accepted at `9e6c991`; Gate 4A
+  developer-preview publication remains pending exact-SHA release acceptance.
 - Cucumber, CLI, generator, configuration discovery, command execution, and
   artifact behavior are deferred future designs and are not part of the `0.1`
   root-package compatibility promise.

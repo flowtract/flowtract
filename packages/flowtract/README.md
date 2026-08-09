@@ -5,8 +5,8 @@ workflows. It combines Zod input/output contracts, isolated scenarios,
 Playwright HTTP sessions, authentication, secret-aware interpolation,
 diagnostics, dry runs, cancellation, and deterministic cleanup.
 
-> Gate 3 core production candidate. The package remains private and
-> unpublished. This is not a production-readiness claim; Cucumber, a project
+> Gate 4A developer-preview candidate. Registry publication is pending
+> exact-SHA acceptance. This is not a production-readiness claim; Cucumber, a project
 > CLI, configuration loading, command execution, retries, and reporting remain
 > outside this release.
 
@@ -22,7 +22,7 @@ Install the package with its peers after it is made available through an
 authorized distribution channel:
 
 ```text
-npm install flowtract zod playwright
+npm install flowtract@0.1.0 zod@^4 playwright@^1.62
 ```
 
 ## Five-minute quick start
@@ -249,5 +249,5 @@ imports receive no compatibility guarantee.
 
 Flowtract is not a general infrastructure orchestrator. Gate 3 adds no
 Cucumber adapter, project CLI, configuration loader, generator, reporter,
-retry, command target, additional protocol, telemetry, npm publication, or
-production-ready claim.
+retry, command target, additional protocol, telemetry, or production-ready
+claim.

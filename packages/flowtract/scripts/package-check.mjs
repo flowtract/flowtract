@@ -21,6 +21,10 @@ import {
 
 const startedAt = Date.now();
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const repositoryRoot = path.resolve(packageRoot, '..', '..');
+const expectedFiles = JSON.parse(
+  await readFile(path.join(repositoryRoot, 'release', 'package-files.json'), 'utf8')
+);
 const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), 'flowtract-gate2-'));
 
 try {
@@ -32,9 +36,12 @@ try {
   if (archive === undefined) {
     throw new Error('npm pack did not report an archive.');
   }
-  if (archive.files.length !== 84) {
+  const actualFiles = archive.files.map(file => file.path).sort();
+  if (JSON.stringify(actualFiles) !== JSON.stringify(expectedFiles)) {
+    const missing = expectedFiles.filter(file => !actualFiles.includes(file));
+    const unexpected = actualFiles.filter(file => !expectedFiles.includes(file));
     throw new Error(
-      `Package archive must contain exactly 84 reviewed files, found ${archive.files.length}.`
+      `Package archive differs from the reviewed snapshot. Missing: ${missing.join(', ') || 'none'}. Unexpected: ${unexpected.join(', ') || 'none'}.`
     );
   }
 
@@ -64,6 +71,16 @@ try {
   }
 
   const tarball = path.join(temporaryRoot, archive.filename);
+  const packedManifest = JSON.parse(await readFile(path.join(packageRoot, 'package.json'), 'utf8'));
+  if (
+    packedManifest.name !== 'flowtract' ||
+    packedManifest.version !== '0.1.0' ||
+    packedManifest.private !== undefined ||
+    packedManifest.publishConfig?.access !== 'public' ||
+    packedManifest.publishConfig?.provenance !== true
+  ) {
+    throw new Error('Flowtract package publication metadata does not match Gate 4A.');
+  }
   runNpm(['exec', '--', 'publint', 'run', tarball, '--strict'], {
     cwd: packageRoot
   });
@@ -122,7 +139,7 @@ try {
     throw new Error(`Package proof exceeded 60 seconds (${durationMs}ms).`);
   }
   console.log(
-    `Flowtract package proof passed with ${archive.files.length} files in ${durationMs}ms.`
+    `Flowtract package proof passed with ${actualFiles.length} files in ${durationMs}ms.`
   );
 } finally {
   await rm(temporaryRoot, { recursive: true, force: true });

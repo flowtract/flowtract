@@ -14,6 +14,14 @@ const requiredPaths = [
   'DEVELOPERS_CERTIFICATE_OF_ORIGIN.txt',
   'docs/open-source/v0.1/README.md',
   '.github/workflows/gate3-acceptance.yml',
+  '.github/workflows/release-rehearsal.yml',
+  '.github/workflows/release.yml',
+  '.github/workflows/pages.yml',
+  'release/flowtract-0.1.json',
+  'release/package-files.json',
+  'release/root-exports.json',
+  'docs/site/index.md',
+  'examples/market-gap/authenticated-workflow.mjs',
   'packages/flowtract/package.json',
   'packages/create-flowtract/package.json'
 ];
@@ -53,6 +61,13 @@ const expectedScripts = [
   'sbom:check',
   'package:publish-dry-run',
   'package:publish-dry-run:built',
+  'release:contract:check',
+  'release:self-test',
+  'release:rehearse',
+  'release:registry:check',
+  'market-proof:check',
+  'docs:site:check',
+  'gate4:qa',
   'gate3:qa',
   'gate2:qa',
   'qa'
@@ -85,11 +100,14 @@ const packagePaths = [
   'packages/flowtract/package.json',
   'packages/create-flowtract/package.json'
 ];
-for (const path of packagePaths) {
-  const value = JSON.parse(await readFile(join(root, path), 'utf8'));
-  if (value.private !== true) {
-    throw new Error(`Package must remain private during Gate 2: ${path}`);
-  }
+if (rootPackage.private !== true) {
+  throw new Error('The workspace root must remain private.');
+}
+const createPackage = JSON.parse(
+  await readFile(join(root, 'packages/create-flowtract/package.json'), 'utf8')
+);
+if (createPackage.private !== true) {
+  throw new Error('create-flowtract must remain private during Gate 4A.');
 }
 
 for (const script of expectedScripts) {
@@ -117,7 +135,15 @@ if (flowtractExports.length !== 1 || flowtractExports[0] !== '.') {
   throw new Error('The flowtract package must expose only its root entry point.');
 }
 if (flowtractPackage.bin !== undefined) {
-  throw new Error('The flowtract package must not expose a CLI binary during Gate 3.');
+  throw new Error('The flowtract package must not expose a CLI binary during Gate 4A.');
+}
+if (
+  flowtractPackage.version !== '0.1.0' ||
+  flowtractPackage.private !== undefined ||
+  flowtractPackage.publishConfig?.access !== 'public' ||
+  flowtractPackage.publishConfig?.provenance !== true
+) {
+  throw new Error('The flowtract package must match the Gate 4A public metadata contract.');
 }
 
 for (const path of packagePaths) {

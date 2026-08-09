@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       expected_sha:
-        description: Optional full Gate 3 candidate SHA for manual acceptance
+        description: Optional full candidate SHA for manual acceptance
         required: false
         type: string
 
@@ -16,7 +16,26 @@ permissions:
   contents: read
 
 jobs:
+  classify:
+    name: Classify change scope
+    runs-on: ubuntu-latest
+    outputs:
+      full: ${{ steps.scope.outputs.full }}
+    steps:
+      - name: Check out comparison history
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Classify fail-closed change scope
+        id: scope
+        env:
+          FLOWTRACT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
+          FLOWTRACT_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: node scripts/change-scope.mjs
+
   package-contract:
+    needs: classify
     name: ${{ matrix.os }} / Node ${{ matrix.node }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
@@ -39,45 +58,90 @@ jobs:
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Set up Node.js
+        if: ${{ needs.classify.outputs.full == 'true' || (matrix.os == 'ubuntu-latest' && matrix.node == 24) }}
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: ${{ matrix.node }}
           cache: npm
 
       - name: Install locked dependencies
+        if: ${{ needs.classify.outputs.full == 'true' || (matrix.os == 'ubuntu-latest' && matrix.node == 24) }}
         run: npm ci --ignore-scripts
 
+      - name: Run lightweight Markdown proof
+        if: ${{ needs.classify.outputs.full != 'true' && matrix.os == 'ubuntu-latest' && matrix.node == 24 }}
+        run: |
+          npm run format:check
+          npm run docs:site:check
+          npm run repository:check
+          git diff --check
+
+      - name: Confirm lightweight lane
+        if: ${{ needs.classify.outputs.full != 'true' && !(matrix.os == 'ubuntu-latest' && matrix.node == 24) }}
+        run: echo "Markdown-only change; full runtime lane delegated to the accepted baseline."
+
       - name: Check repository boundary
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm run repository:check
 
+      - name: Validate Gate 4A release contract
+        if: ${{ needs.classify.outputs.full == 'true' }}
+        run: |
+          npm run release:contract:check
+          npm run release:self-test
+
+      - name: Validate documentation site
+        if: ${{ needs.classify.outputs.full == 'true' }}
+        run: npm run docs:site:check
+
       - name: Scan complete repository history for credentials
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm run secret:check
 
       - name: Check formatting
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm run format:check
 
       - name: Lint contracts and execution runtime
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm run lint
 
       - name: Check TypeScript source and type contracts
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm run type-check
 
-      - name: Run Gate 3 unit, property, race, stress, and integration coverage
+      - name: Run Gate 4A unit, property, race, stress, and integration coverage
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm run coverage
 
       - name: Build dual-module package
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm run build
 
+      - name: Validate executable package documentation and root API docs
+        if: ${{ needs.classify.outputs.full == 'true' && matrix.os == 'ubuntu-latest' && matrix.node == 24 }}
+        run: |
+          npm run docs:check
+          npm run api-docs:check
+
+      - name: Execute public market-gap workflows
+        if: ${{ needs.classify.outputs.full == 'true' }}
+        run: npm run market-proof:check
+
       - name: Validate archive and clean consumers
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm run package:check
 
       - name: Audit production dependencies
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm audit --omit=dev --audit-level=high
 
       - name: Verify repository integrity
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: git diff --exit-code
 
   declaration-matrix:
+    needs: classify
     name: TypeScript declaration compatibility
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -86,24 +150,34 @@ jobs:
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Set up Node.js
+        if: ${{ needs.classify.outputs.full == 'true' }}
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24
           cache: npm
 
       - name: Install locked dependencies
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm ci --ignore-scripts
 
       - name: Build package
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm run build
 
       - name: Check TypeScript 5.5, 6.0, and 7.0 consumers
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm run type-matrix
 
       - name: Verify repository integrity
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: git diff --exit-code
 
+      - name: Confirm lightweight declaration lane
+        if: ${{ needs.classify.outputs.full != 'true' }}
+        run: echo "Markdown-only change; declaration compatibility is unchanged."
+
   clean-clone:
+    needs: classify
     name: Clean-clone proof
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -114,21 +188,30 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Node.js
+        if: ${{ needs.classify.outputs.full == 'true' }}
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24
           cache: npm
 
       - name: Install locked dependencies
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm ci --ignore-scripts
 
       - name: Scan complete repository history for credentials
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm run secret:check
 
       - name: Run isolated clean-clone proof
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm run clean-clone:check
 
+      - name: Confirm lightweight clean-clone lane
+        if: ${{ needs.classify.outputs.full != 'true' }}
+        run: echo "Markdown-only change; committed runtime/package tree is unchanged."
+
   supply-chain:
+    needs: classify
     name: Supply chain and peer compatibility
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -137,36 +220,50 @@ jobs:
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Set up Node.js
+        if: ${{ needs.classify.outputs.full == 'true' }}
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 24
           cache: npm
 
       - name: Install locked dependencies
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm ci --ignore-scripts
 
       - name: Audit complete dependency graph
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm audit --audit-level=low
 
       - name: Audit production dependency graph
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm audit --omit=dev --audit-level=high
 
       - name: Build package
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm run build
 
       - name: Verify minimum and latest reviewed peers
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm run peer-matrix
 
       - name: Verify generated CycloneDX SBOM
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm run sbom:check
 
       - name: Rehearse the reviewed package publication
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: npm run package:publish-dry-run:built
 
       - name: Verify repository integrity
+        if: ${{ needs.classify.outputs.full == 'true' }}
         run: git diff --exit-code
 
+      - name: Confirm lightweight supply-chain lane
+        if: ${{ needs.classify.outputs.full != 'true' }}
+        run: echo "Markdown-only change; dependency graph and package output are unchanged."
+
   gate3-acceptance:
+    needs: classify
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.expected_sha != '' }}
     uses: ./.github/workflows/gate3-acceptance.yml
     with:

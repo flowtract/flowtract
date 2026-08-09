@@ -22,11 +22,26 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Classify fail-closed change scope
+        id: scope
+        env:
+          FLOWTRACT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
+          FLOWTRACT_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: node scripts/change-scope.mjs
 
       - name: Initialize CodeQL
+        if: ${{ steps.scope.outputs.full == 'true' }}
         uses: github/codeql-action/init@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4
         with:
           languages: javascript-typescript
 
       - name: Perform CodeQL analysis
+        if: ${{ steps.scope.outputs.full == 'true' }}
         uses: github/codeql-action/analyze@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4
+
+      - name: Confirm lightweight CodeQL lane
+        if: ${{ steps.scope.outputs.full != 'true' }}
+        run: echo "Markdown-only change; executable source and workflow logic are unchanged."

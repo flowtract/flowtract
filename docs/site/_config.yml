@@ -1,0 +1,8 @@
+title: Flowtract
+description: Typed lifecycle contracts for authenticated, stateful REST workflows
+url: https://flowtract.github.io
+baseurl: /flowtract
+theme: jekyll-theme-minimal
+repository: flowtract/flowtract
+exclude:
+  - README.md

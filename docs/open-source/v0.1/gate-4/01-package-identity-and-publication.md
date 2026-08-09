@@ -44,7 +44,11 @@ publishing before the final release.
 `release.yml` is manual-only and accepts:
 
 - `expected_sha`: required full 40-character commit SHA;
-- `channel`: exactly `bootstrap` or `final`.
+- `channel`: exactly `bootstrap` or `final`;
+- `rehearsal_run_id`: the successful exact-SHA no-publish rehearsal whose
+  attested artifact will be published;
+- `recover_existing`: false by default and true only for an explicitly
+  authorized identical-artifact recovery.
 
 The workflow must:
 
@@ -55,16 +59,21 @@ The workflow must:
 4. use Node 24 and exactly npm `11.19.0`, which supports OIDC trusted
    publishing and the `npm trust` verification path;
 5. disable npm dependency caching in release jobs;
-6. run locked install, complete audit, Gate 4A QA, compiler/peer consumers,
-   package inspection, SBOM, secret scan, and publication dry run;
-7. build and pack once, calculate the tarball SHA-512, and use that reviewed
-   artifact for publication verification;
+6. accept only a successful manual rehearsal on the same main-branch SHA and
+   channel;
+7. verify the GitHub artifact attestation and tarball SHA-512, then publish the
+   exact rehearsed artifact without rebuilding it;
 8. publish only after approval through the matching protected environment;
 9. emit no token, OIDC claim, secret, package body, or generated credential;
 10. upload only already-public or redacted evidence with SHA-pinned actions.
 
 Pull requests, pushes, tags, releases, schedules, reusable workflows, and fork
 events must not invoke a publish job.
+
+The separate manual `release-rehearsal.yml` performs locked installation,
+complete audit, contract/package inspection, SBOM, secret-safe publication dry
+run, exact channel packing, and GitHub artifact attestation without any npm
+write credential.
 
 ## Bootstrap publication
 

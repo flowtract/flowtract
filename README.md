@@ -1,8 +1,8 @@
 # Flowtract
 
-> **Core production-candidate proof accepted:** Flowtract remains under active
-> development and is not yet published or claimed as production- or
-> enterprise-ready.
+> **Gate 4A release candidate:** the core production-candidate proof is
+> accepted. Public `0.1.0` publication is pending exact-SHA release acceptance;
+> Flowtract is not claimed as production- or enterprise-ready.
 
 **Test contracts in motion.**
 
@@ -30,9 +30,8 @@ The Gate 3 core production-candidate proof accepted through
 - executable packed documentation and IntelliSense coverage for every root export.
 
 Cucumber integration, the CLI, configuration-file loading, generators, command
-targeting, retries, reporting, and npm publication remain future gates. Gate 4
-developer-preview publication and external evaluation is next, subject to a
-separate approved specification. See the
+targeting, retries, and reporting remain future gates. Gate 4A prepares the
+developer-preview package and Gate 4B performs external evaluation. See the
 [canonical v0.1 specification](docs/open-source/v0.1/README.md) for implemented
 behavior, target behavior, and non-goals.
 
@@ -42,12 +41,13 @@ Flowtract requires Node 22 or 24.
 
 ```bash
 npm ci
-npm run gate3:qa
+npm run gate4:qa
 npm run type-matrix
 npm run clean-clone:check
 ```
 
-The workspace contains two private pre-release packages:
+The workspace contains the public-package candidate and one private deferred
+package:
 
 ```text
 packages/
@@ -56,7 +56,7 @@ packages/
 ```
 
 Neither package is currently published. Only the `flowtract` root entry point
-exists during Gate 3.
+is authorized for Gate 4A publication.
 
 ## Community
 
