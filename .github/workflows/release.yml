@@ -1,0 +1,229 @@
+name: Publish developer preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact protected-main commit accepted for publication
+        required: true
+        type: string
+      channel:
+        description: Authorized release channel
+        required: true
+        type: choice
+        options:
+          - bootstrap
+          - final
+      rehearsal_run_id:
+        description: Successful exact-SHA Release rehearsal run ID
+        required: true
+        type: string
+      recover_existing:
+        description: Recover an identical already-published artifact
+        required: true
+        default: false
+        type: boolean
+
+concurrency:
+  group: flowtract-npm-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  accept-rehearsal:
+    name: Accept immutable rehearsal
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      attestations: read
+      contents: read
+    steps:
+      - name: Check out accepted source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.expected_sha }}
+          fetch-depth: 0
+
+      - name: Verify protected-main identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "${{ github.ref }}" == "refs/heads/main" ]]
+          [[ "${{ github.sha }}" == "${{ inputs.expected_sha }}" ]]
+          [[ "$(git rev-parse HEAD)" == "${{ inputs.expected_sha }}" ]]
+          git fetch origin main --quiet
+          [[ "$(git rev-parse origin/main)" == "${{ inputs.expected_sha }}" ]]
+
+      - name: Verify rehearsal run identity
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          expected=$'Release rehearsal\tworkflow_dispatch\tmain\t${{ inputs.expected_sha }}\tsuccess'
+          actual="$(gh api "repos/${{ github.repository }}/actions/runs/${{ inputs.rehearsal_run_id }}" --jq '[.name,.event,.head_branch,.head_sha,.conclusion] | @tsv')"
+          [[ "$actual" == "$expected" ]]
+
+      - name: Download accepted rehearsal artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: flowtract-${{ inputs.channel }}-${{ inputs.expected_sha }}
+          path: accepted-release
+          run-id: ${{ inputs.rehearsal_run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Verify GitHub artifact attestation
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh attestation verify accepted-release/*.tgz --repo "${{ github.repository }}"
+
+      - name: Upload accepted artifact into publication run
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: accepted-flowtract-${{ inputs.channel }}-${{ inputs.expected_sha }}
+          path: accepted-release
+          if-no-files-found: error
+          retention-days: 30
+
+  publish-bootstrap:
+    if: ${{ inputs.channel == 'bootstrap' }}
+    needs: accept-rehearsal
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npm-bootstrap
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out accepted source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.expected_sha }}
+
+      - name: Set up Node.js and public registry
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org/
+          package-manager-cache: false
+
+      - name: Pin reviewed npm
+        run: npm install --global npm@11.19.0
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Download accepted artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: accepted-flowtract-${{ inputs.channel }}-${{ inputs.expected_sha }}
+          path: accepted-release
+
+      - name: Publish or recover bootstrap artifact
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_BOOTSTRAP_TOKEN }}
+        run: >-
+          node scripts/release-publish.mjs
+          --channel bootstrap
+          --expected-sha "${{ inputs.expected_sha }}"
+          --evidence accepted-release/release-evidence.json
+          --recover-existing "${{ inputs.recover_existing }}"
+          --result accepted-release/publication-result.json
+
+  publish-final:
+    if: ${{ inputs.channel == 'final' }}
+    needs: accept-rehearsal
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npm-production
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out accepted source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.expected_sha }}
+
+      - name: Set up Node.js and public registry
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org/
+          package-manager-cache: false
+
+      - name: Pin reviewed npm
+        run: npm install --global npm@11.19.0
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Download accepted artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: accepted-flowtract-${{ inputs.channel }}-${{ inputs.expected_sha }}
+          path: accepted-release
+
+      - name: Publish or recover final artifact through OIDC
+        run: >-
+          node scripts/release-publish.mjs
+          --channel final
+          --expected-sha "${{ inputs.expected_sha }}"
+          --evidence accepted-release/release-evidence.json
+          --recover-existing "${{ inputs.recover_existing }}"
+          --result accepted-release/publication-result.json
+
+  registry-acceptance:
+    if: >-
+      ${{ always() &&
+      ((inputs.channel == 'bootstrap' && needs.publish-bootstrap.result == 'success') ||
+      (inputs.channel == 'final' && needs.publish-final.result == 'success')) }}
+    needs:
+      - publish-bootstrap
+      - publish-final
+    name: ${{ matrix.os }} registry acceptance
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Check out accepted source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.expected_sha }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Pin reviewed npm
+        run: npm install --global npm@11.19.0
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Download accepted artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: accepted-flowtract-${{ inputs.channel }}-${{ inputs.expected_sha }}
+          path: accepted-release
+
+      - name: Execute public-registry consumers
+        run: >-
+          npm run release:registry:check --
+          --evidence accepted-release/release-evidence.json

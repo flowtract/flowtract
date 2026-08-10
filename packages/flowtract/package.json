@@ -1,7 +1,6 @@
 {
   "name": "flowtract",
-  "version": "0.1.0-dev.0",
-  "private": true,
+  "version": "0.1.0",
   "description": "Schema-verified, stateful REST API workflows for TypeScript",
   "license": "Apache-2.0",
   "author": "Flowtract maintainers",
@@ -13,6 +12,10 @@
   "homepage": "https://github.com/flowtract/flowtract#readme",
   "bugs": {
     "url": "https://github.com/flowtract/flowtract/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "type": "module",
   "sideEffects": false,
@@ -41,6 +44,7 @@
     "NOTICE"
   ],
   "scripts": {
+    "prepublishOnly": "node scripts/release-guard.mjs",
     "clean": "rimraf dist",
     "build": "npm run clean && tsc -p tsconfig.build.json && node scripts/build.mjs",
     "package:check": "node scripts/package-check.mjs",

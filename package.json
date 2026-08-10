@@ -17,8 +17,8 @@
     "packages/*"
   ],
   "scripts": {
-    "format": "prettier --write \"packages/**/*.{ts,mts,js,mjs,json,md}\" \".github/**/*.{yml,yaml,md}\" \"docs/**/*.md\" \"scripts/**/*.mjs\" eslint.config.mjs README.md CHANGELOG.md package.json",
-    "format:check": "prettier --check \"packages/**/*.{ts,mts,js,mjs,json,md}\" \".github/**/*.{yml,yaml,md}\" \"docs/**/*.md\" \"scripts/**/*.mjs\" eslint.config.mjs README.md CHANGELOG.md package.json",
+    "format": "prettier --write \"packages/**/*.{ts,mts,js,mjs,json,md}\" \"examples/**/*.{js,mjs,md}\" \".github/**/*.{yml,yaml,md}\" \"docs/**/*.md\" \"scripts/**/*.mjs\" eslint.config.mjs README.md CHANGELOG.md package.json",
+    "format:check": "prettier --check \"packages/**/*.{ts,mts,js,mjs,json,md}\" \"examples/**/*.{js,mjs,md}\" \".github/**/*.{yml,yaml,md}\" \"docs/**/*.md\" \"scripts/**/*.mjs\" eslint.config.mjs README.md CHANGELOG.md package.json",
     "lint": "eslint packages/flowtract/src packages/flowtract/test --ext .ts",
     "type-check": "tsc -p packages/flowtract/tsconfig.json",
     "test": "vitest run --config packages/flowtract/vitest.config.mts",
@@ -40,9 +40,16 @@
     "sbom:check": "node scripts/sbom-check.mjs",
     "package:publish-dry-run": "npm run build && npm run package:publish-dry-run --workspace flowtract",
     "package:publish-dry-run:built": "npm run package:publish-dry-run --workspace flowtract",
+    "release:contract:check": "node scripts/release-contract-check.mjs",
+    "release:self-test": "node scripts/release-self-test.mjs",
+    "release:rehearse": "node scripts/release-rehearse.mjs",
+    "release:registry:check": "node scripts/release-registry-check.mjs",
+    "market-proof:check": "node scripts/market-proof-check.mjs",
+    "docs:site:check": "node scripts/docs-site-check.mjs",
+    "gate4:qa": "node scripts/gate4-qa.mjs",
     "gate3:qa": "node scripts/qa.mjs",
     "gate2:qa": "npm run gate3:qa",
-    "qa": "npm run gate3:qa"
+    "qa": "npm run gate4:qa"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",

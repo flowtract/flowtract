@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "package": "flowtract",
+  "packageRoot": "packages/flowtract",
+  "registry": "https://registry.npmjs.org/",
+  "repository": "git+https://github.com/flowtract/flowtract.git",
+  "owners": ["iamprasanna-dev"],
+  "final": {
+    "version": "0.1.0",
+    "tag": "latest",
+    "environment": "npm-production"
+  },
+  "bootstrap": {
+    "version": "0.1.0-rc.0",
+    "tag": "next",
+    "environment": "npm-bootstrap"
+  },
+  "releaseWorkflow": "release.yml",
+  "rehearsalWorkflow": "release-rehearsal.yml",
+  "pagesWorkflow": "pages.yml",
+  "node": "24",
+  "npm": "11.19.0",
+  "archiveFiles": 84,
+  "rootExports": 66
+}

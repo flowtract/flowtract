@@ -1,0 +1,92 @@
+name: Documentation
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact final release SHA to document
+        required: true
+        type: string
+  push:
+    branches:
+      - main
+    paths:
+      - docs/site/**
+      - packages/flowtract/README.md
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.FLOWTRACT_DOCS_RELEASED == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out documentation source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.expected_sha || github.sha }}
+
+      - name: Verify initial release identity
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "${{ github.ref }}" == "refs/heads/main" ]]
+          [[ "${{ github.sha }}" == "${{ inputs.expected_sha }}" ]]
+          [[ "$(git rev-parse HEAD)" == "${{ inputs.expected_sha }}" ]]
+          git fetch origin main --quiet
+          [[ "$(git rev-parse origin/main)" == "${{ inputs.expected_sha }}" ]]
+
+      - name: Validate tracked documentation
+        run: node scripts/docs-site-check.mjs
+
+      - name: Set up Node.js for initial registry proof
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Install release proof dependencies
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          npm install --global npm@11.19.0
+          npm ci --ignore-scripts
+
+      - name: Prove final public-registry package
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: npm run release:registry:check -- --version 0.1.0
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+
+      - name: Build tracked Markdown with Jekyll
+        uses: actions/jekyll-build-pages@44a6e6beabd48582f863aeeb6cb2151cc1716697 # v1
+        with:
+          source: docs/site
+          destination: _site
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy documentation
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5

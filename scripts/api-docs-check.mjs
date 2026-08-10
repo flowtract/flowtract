@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
@@ -27,6 +28,13 @@ const moduleSymbol = checker.getSymbolAtLocation(entry);
 if (moduleSymbol === undefined) throw new Error('Could not resolve the root Flowtract module.');
 const undocumented = [];
 const exports = checker.getExportsOfModule(moduleSymbol);
+const expectedExports = JSON.parse(
+  await readFile(path.join(root, 'release', 'root-exports.json'), 'utf8')
+);
+const actualExports = exports.map(exported => exported.name).sort();
+if (JSON.stringify(actualExports) !== JSON.stringify(expectedExports)) {
+  throw new Error('Root exports differ from the reviewed Gate 4A snapshot.');
+}
 for (const exported of exports) {
   const target =
     (exported.flags & ts.SymbolFlags.Alias) === 0 ? exported : checker.getAliasedSymbol(exported);

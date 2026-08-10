@@ -56,51 +56,71 @@ deployment pass; no telemetry or private evidence is collected.
 **Proof:** one immutable candidate is ready for bootstrap authorization with no
 runtime/public-contract change and no unresolved release blocker.
 
-## Pull request and release sequence
+## Branch, pull request, and release sequence
 
-1. Approve and merge this specification PR.
-2. Implement Gate 4A in one draft PR with signed slice commits.
-3. Require all protected checks and repository-owner semantic/security review.
-4. Merge the implementation only after it is `Ready for release rehearsal`.
-5. Configure protected GitHub environments and create the short-lived bootstrap
+Gate 4A uses one consolidated side branch so documentation-only specification
+work does not trigger the protected cross-platform matrix separately from the
+implementation it governs.
+
+1. Commit the decision-complete specification and this delivery-policy
+   amendment as signed checkpoints.
+2. Record repository-owner approval against the exact amended specification
+   revision before runtime, package, or workflow implementation begins.
+3. Implement Gate 4A with signed slice commits on the same side branch. Pushes
+   may back up the branch but no pull request is opened until the candidate is
+   complete.
+4. Open one ready-for-review implementation PR and require all protected checks
+   plus repository-owner semantic/security review.
+5. Merge only after the candidate is `Ready for release rehearsal` and the
+   repository owner gives separate merge authorization.
+6. Configure protected GitHub environments and create the short-lived bootstrap
    token outside tracked source.
-6. Obtain explicit authorization for the exact bootstrap SHA and publish
+7. Obtain explicit authorization for the exact bootstrap SHA and publish
    `0.1.0-rc.0`.
-7. Verify the registry artifact, configure trusted publishing, disallow tokens,
+8. Verify the registry artifact, configure trusted publishing, disallow tokens,
    and revoke the bootstrap token.
-8. Obtain explicit authorization for final `0.1.0` publication.
-9. Publish through OIDC, verify, create the tag/release, deploy docs, and write
-   the completion record.
+9. Obtain explicit authorization for final `0.1.0` publication.
+10. Publish through OIDC, verify, create the tag/release, deploy docs, and write
+    the completion record.
 
 Publication is never bundled into PR merge and is never inferred from green CI.
 
-## Specification verification
+## Cost-aware verification
 
-This specification PR must change only Markdown and pass:
+Validation is proportional until the complete candidate exists:
+
+- Markdown-only work runs formatting, links, stale-language, repository-scope,
+  and diff checks.
+- Each implementation slice runs only checks that exercise its changed
+  boundary.
+- Any source, package, manifest, lockfile, script, example, workflow, or
+  uncertain change is classified as full-impact.
+- The complete side branch runs the full local Gate 4A suite once before its
+  pull request.
+- The protected pull request supplies the committed clean-clone and
+  cross-platform proof; these are not duplicated locally.
+- Manual dispatch always uses the full-impact profile.
+
+The Markdown-only specification checkpoint requires:
 
 ```powershell
-npm ci --ignore-scripts
 npm run format:check
-npm run gate3:qa
-npm run type-matrix
-npm run clean-clone:check
-npm audit --audit-level=low
 git diff --check
 git status --short
 ```
 
-The Gate 3 acceptance workflow is not rerun because this specification changes
-no runtime, dependency, package, workflow, or test.
+The Gate 3 acceptance workflow is not rerun for the specification checkpoint
+because it changes no runtime, dependency, package, workflow, or test.
 
 ## Approval record
 
-| Field             | Value                                  |
-| ----------------- | -------------------------------------- |
-| Decision          | Pending                                |
-| Approved by       | Pending                                |
-| Approval date     | Pending                                |
-| Approved revision | Pending                                |
-| Authorization     | Gate 4A repository implementation only |
+| Field             | Value                                      |
+| ----------------- | ------------------------------------------ |
+| Decision          | Approved                                   |
+| Approved by       | `iamprasanna-dev`                          |
+| Approval date     | 2026-08-09                                 |
+| Approved revision | `72fa3dfbffd666d5d8d921fa089b1476ed4ba4d3` |
+| Authorization     | Gate 4A repository implementation only     |
 
 The repository owner must review:
 
@@ -112,9 +132,9 @@ The repository owner must review:
 - market-gap claims and Gate 4B handoff;
 - the parallel production-readiness track and explicit non-goals.
 
-Runtime implementation, publication, or external configuration cannot begin
-until an exact specification revision is approved. Publication still requires
-the later explicit authorizations described above.
+Runtime, package, documentation, and workflow implementation may proceed
+against the approved revision. Publication and external configuration still
+require the later explicit authorizations described above.
 
 ## Completion record
 

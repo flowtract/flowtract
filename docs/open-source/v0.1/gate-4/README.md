@@ -1,6 +1,6 @@
 # Gate 4 — Developer Preview and Market Validation
 
-> **Status:** Draft; awaiting repository-owner approval
+> **Status:** Approved; Gate 4A repository implementation in progress
 > **Baseline:** Gate 3 completion merge `d08c13055178d23cc4a381afccfff86907c11c68`
 > **Gate 4A target:** Publish and prove `flowtract@0.1.0` as a developer preview
 > **Gate 4B target:** Launch external market-gap evaluation after publication
@@ -44,6 +44,10 @@ Gate 4A changes release state, not the accepted runtime contract:
 
 Any required runtime or public-contract change stops Gate 4A and requires a
 separate approved specification amendment.
+
+Repository implementation is authorized against amended specification
+revision `72fa3dfbffd666d5d8d921fa089b1476ed4ba4d3`. Merge and every publication
+operation remain separately authorized.
 
 ## Completion boundary
 
