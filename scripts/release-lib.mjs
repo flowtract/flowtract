@@ -52,8 +52,10 @@ export function run(command, arguments_, options = {}) {
 
 export function runNpm(arguments_, options = {}) {
   const npmCli = process.env.npm_execpath;
-  if (npmCli === undefined) throw new Error('npm_execpath is required for release proof.');
-  return run(process.execPath, [npmCli, ...arguments_], options);
+  if (npmCli !== undefined) return run(process.execPath, [npmCli, ...arguments_], options);
+  return process.platform === 'win32'
+    ? run(process.env.ComSpec ?? 'cmd.exe', ['/d', '/s', '/c', 'npm.cmd', ...arguments_], options)
+    : run('npm', arguments_, options);
 }
 
 export async function sha512(file) {

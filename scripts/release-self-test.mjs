@@ -7,6 +7,7 @@ import {
   registryDecision,
   requireFullSha,
   run,
+  runNpm,
   selectChannel,
   validatePackageOwnership,
   validateSignatureProof,
@@ -151,4 +152,12 @@ assert.doesNotThrow(() =>
   })
 );
 
-console.log('Gate 4A release self-test passed with 20 fail-closed decisions.');
+const inheritedNpmCli = process.env.npm_execpath;
+delete process.env.npm_execpath;
+try {
+  assert.match(runNpm(['--version'], { capture: true }).trim(), /^\d+\.\d+\.\d+$/u);
+} finally {
+  if (inheritedNpmCli !== undefined) process.env.npm_execpath = inheritedNpmCli;
+}
+
+console.log('Gate 4A release self-test passed with 21 fail-closed decisions.');
