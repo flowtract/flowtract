@@ -8,7 +8,7 @@ import {
   repositoryRoot,
   registryDecision,
   requireFullSha,
-  run,
+  runGit,
   runNpm,
   selectChannel,
   sha512,
@@ -54,7 +54,7 @@ if (JSON.stringify(evidence.files) !== JSON.stringify(expectedFiles)) {
 if (JSON.stringify(evidence.exports) !== JSON.stringify(expectedExports)) {
   throw new Error('Release evidence exports differ from the reviewed snapshot.');
 }
-const actualSha = run('git', ['rev-parse', 'HEAD'], { capture: true }).trim();
+const actualSha = runGit(['rev-parse', 'HEAD'], { capture: true }).trim();
 if (actualSha !== expectedSha) throw new Error('Publish checkout differs from the accepted SHA.');
 const recoverExisting = arguments_.get('recover-existing') === 'true';
 const before = await fetchPackageMetadata(contract.registry, contract.package);

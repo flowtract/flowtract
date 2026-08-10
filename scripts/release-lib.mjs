@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -41,21 +42,42 @@ export function selectChannel(contract, channel) {
   return { channel, ...contract[channel] };
 }
 
-export function run(command, arguments_, options = {}) {
-  return execFileSync(command, arguments_, {
+function childOptions(options) {
+  return {
     cwd: options.cwd ?? repositoryRoot,
     encoding: 'utf8',
     stdio: options.capture === true ? ['ignore', 'pipe', 'pipe'] : 'inherit',
     env: options.env ?? process.env
-  });
+  };
+}
+
+export function runGit(arguments_, options = {}) {
+  return execFileSync('git', arguments_, childOptions(options));
+}
+
+export function runNode(arguments_, options = {}) {
+  return execFileSync('node', arguments_, childOptions(options));
+}
+
+function resolveBundledNpmCli() {
+  const executableDirectory = path.dirname(process.execPath);
+  const candidates = [
+    path.join(executableDirectory, 'node_modules', 'npm', 'bin', 'npm-cli.js'),
+    path.resolve(executableDirectory, '..', 'node_modules', 'npm', 'bin', 'npm-cli.js'),
+    path.resolve(executableDirectory, '..', 'lib', 'node_modules', 'npm', 'bin', 'npm-cli.js')
+  ];
+  const candidate = candidates.find(value => existsSync(value));
+  if (candidate === undefined && process.platform === 'win32') {
+    throw new Error('Unable to locate npm-cli.js without invoking a shell.');
+  }
+  return candidate;
 }
 
 export function runNpm(arguments_, options = {}) {
-  const npmCli = process.env.npm_execpath;
-  if (npmCli !== undefined) return run(process.execPath, [npmCli, ...arguments_], options);
-  return process.platform === 'win32'
-    ? run(process.env.ComSpec ?? 'cmd.exe', ['/d', '/s', '/c', 'npm.cmd', ...arguments_], options)
-    : run('npm', arguments_, options);
+  const npmCli = resolveBundledNpmCli();
+  return npmCli === undefined
+    ? execFileSync('npm', arguments_, childOptions(options))
+    : runNode([npmCli, ...arguments_], options);
 }
 
 export async function sha512(file) {

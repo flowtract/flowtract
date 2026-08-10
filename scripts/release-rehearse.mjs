@@ -7,7 +7,7 @@ import {
   readReleaseContract,
   repositoryRoot,
   requireFullSha,
-  run,
+  runGit,
   runNpm,
   selectChannel,
   sha512
@@ -19,7 +19,7 @@ const selected = selectChannel(contract, arguments_.get('channel'));
 const sourceSha = requireFullSha(arguments_.get('expected-sha'));
 const output = path.resolve(arguments_.get('output') ?? '');
 if (arguments_.get('output') === undefined) throw new Error('--output is required.');
-const actualSha = run('git', ['rev-parse', 'HEAD'], { capture: true }).trim();
+const actualSha = runGit(['rev-parse', 'HEAD'], { capture: true }).trim();
 if (actualSha !== sourceSha) throw new Error('Rehearsal SHA does not match checked-out HEAD.');
 
 const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), 'flowtract-release-rehearsal-'));
