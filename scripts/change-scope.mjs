@@ -1,5 +1,5 @@
 import { appendFile } from 'node:fs/promises';
-import { run } from './release-lib.mjs';
+import { runGit } from './release-lib.mjs';
 
 const event = process.env.GITHUB_EVENT_NAME;
 let full = event === 'workflow_dispatch';
@@ -14,7 +14,7 @@ if (!full) {
   ) {
     full = true;
   } else {
-    files = run('git', ['diff', '--name-only', base, head], { capture: true })
+    files = runGit(['diff', '--name-only', base, head], { capture: true })
       .split(/\r?\n/u)
       .filter(Boolean);
     full = files.length === 0 || files.some(file => !file.toLowerCase().endsWith('.md'));

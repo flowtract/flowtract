@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,8 +8,28 @@ const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), 'flowtract-publish-'));
 
 try {
+  const candidateRoot = path.join(temporaryRoot, 'package');
+  await cp(packageRoot, candidateRoot, {
+    recursive: true,
+    filter: value => !value.split(path.sep).includes('node_modules')
+  });
+  const sourceManifest = JSON.parse(await readFile(path.join(packageRoot, 'package.json'), 'utf8'));
+  const candidateManifest = {
+    ...sourceManifest,
+    version: `0.0.0-release-check.${(process.env.GITHUB_SHA ?? 'local').slice(0, 12)}`
+  };
+  const { version: _sourceVersion, ...sourceContract } = sourceManifest;
+  const { version: _candidateVersion, ...candidateContract } = candidateManifest;
+  if (JSON.stringify(candidateContract) !== JSON.stringify(sourceContract)) {
+    throw new Error('Publication rehearsal may change only the temporary package version.');
+  }
+  await writeFile(
+    path.join(candidateRoot, 'package.json'),
+    `${JSON.stringify(candidateManifest, null, 2)}\n`,
+    'utf8'
+  );
   const output = runNpm(['publish', '--dry-run', '--tag', 'next', '--json'], {
-    cwd: packageRoot,
+    cwd: candidateRoot,
     capture: true,
     env: {
       ...process.env,

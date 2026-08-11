@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { run } from './release-lib.mjs';
+import { runNode } from './release-lib.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 for (const file of [
@@ -8,7 +8,7 @@ for (const file of [
   'lifecycle-workflow.mjs',
   'contract-workflow.mjs'
 ]) {
-  const output = run(process.execPath, [path.join(root, 'examples', 'market-gap', file)], {
+  const output = runNode([path.join(root, 'examples', 'market-gap', file)], {
     capture: true,
     cwd: root
   });

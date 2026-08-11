@@ -6,7 +6,7 @@ import {
   repositoryRoot,
   registryDecision,
   requireFullSha,
-  run,
+  runNode,
   runNpm,
   selectChannel,
   validatePackageOwnership,
@@ -138,11 +138,17 @@ assert.equal(validateSignatureProof('1 package has verified attestations'), true
 assert.throws(() => validateSignatureProof('0 packages have verified attestations'), /provenance/u);
 
 const guard = path.join(repositoryRoot, 'packages', 'flowtract', 'scripts', 'release-guard.mjs');
-assert.throws(() => run(process.execPath, [guard], { capture: true, env: {} }));
+const executableSearchPath = process.env.PATH ?? process.env.Path;
+if (executableSearchPath === undefined) {
+  throw new Error('Release self-test requires an executable search path.');
+}
+const executableEnvironment = { PATH: executableSearchPath };
+assert.throws(() => runNode([guard], { capture: true, env: executableEnvironment }));
 assert.doesNotThrow(() =>
-  run(process.execPath, [guard], {
+  runNode([guard], {
     capture: true,
     env: {
+      ...executableEnvironment,
       FLOWTRACT_RELEASE_AUTHORIZED: '1',
       FLOWTRACT_RELEASE_CHANNEL: 'final',
       FLOWTRACT_EXPECTED_SHA: sha,
@@ -153,11 +159,14 @@ assert.doesNotThrow(() =>
 );
 
 const inheritedNpmCli = process.env.npm_execpath;
-delete process.env.npm_execpath;
+process.env.npm_execpath = path.join('relative', 'npm-cli.js');
 try {
+  assert.match(runNpm(['--version'], { capture: true }).trim(), /^\d+\.\d+\.\d+$/u);
+  delete process.env.npm_execpath;
   assert.match(runNpm(['--version'], { capture: true }).trim(), /^\d+\.\d+\.\d+$/u);
 } finally {
   if (inheritedNpmCli !== undefined) process.env.npm_execpath = inheritedNpmCli;
+  else delete process.env.npm_execpath;
 }
 
-console.log('Gate 4A release self-test passed with 21 fail-closed decisions.');
+console.log('Gate 4A release self-test passed with 22 fail-closed decisions.');
