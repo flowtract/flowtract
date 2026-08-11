@@ -138,11 +138,17 @@ assert.equal(validateSignatureProof('1 package has verified attestations'), true
 assert.throws(() => validateSignatureProof('0 packages have verified attestations'), /provenance/u);
 
 const guard = path.join(repositoryRoot, 'packages', 'flowtract', 'scripts', 'release-guard.mjs');
-assert.throws(() => runNode([guard], { capture: true, env: {} }));
+const executableSearchPath = process.env.PATH ?? process.env.Path;
+if (executableSearchPath === undefined) {
+  throw new Error('Release self-test requires an executable search path.');
+}
+const executableEnvironment = { PATH: executableSearchPath };
+assert.throws(() => runNode([guard], { capture: true, env: executableEnvironment }));
 assert.doesNotThrow(() =>
   runNode([guard], {
     capture: true,
     env: {
+      ...executableEnvironment,
       FLOWTRACT_RELEASE_AUTHORIZED: '1',
       FLOWTRACT_RELEASE_CHANNEL: 'final',
       FLOWTRACT_EXPECTED_SHA: sha,
