@@ -81,6 +81,27 @@ naming both SHAs may authorize the exact launch sequence:
 Direct invitations require a user-supplied target list and separate outbound
 message approval.
 
+## Private starter implementation evidence
+
+| Field               | Recorded result                                                                                    |
+| ------------------- | -------------------------------------------------------------------------------------------------- |
+| Repository          | `flowtract/flowtract-starter`                                                                      |
+| Visibility          | Private; issues, Discussions, projects, and wiki disabled                                          |
+| Template status     | Disabled until launch authorization                                                                |
+| Candidate           | `b81c4cac05f76b708e3917dbdf81e87d6b5cb61d`                                                         |
+| Proof               | [Starter run 31559046420](https://github.com/flowtract/flowtract-starter/actions/runs/31559046420) |
+| Ubuntu / Node 22    | Passed                                                                                             |
+| Windows / Node 24   | Passed                                                                                             |
+| Registry contract   | Exact `flowtract@0.1.0`, `zod@4.4.3`, and `playwright@1.62.1`                                      |
+| Audit and integrity | Zero production findings; repository clean after execution                                         |
+
+GitHub returned HTTP 403 when branch protection was requested while the starter
+was private because the organization's current plan enables that feature only
+for public repositories. The repository remains private and unprotected rather
+than weakening visibility authorization. Main protection with the two accepted
+starter checks is therefore a mandatory launch step immediately after public
+conversion and before the announcement.
+
 ## Completion boundary
 
 Gate 4B completes only when five eligible evaluations yield a defined verdict
