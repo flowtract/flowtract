@@ -27,6 +27,7 @@ market validation, or separately approved evidence-driven feature work.
 3. [Documentation and market proof](02-documentation-and-market-proof.md)
 4. [Acceptance, recovery, and evidence](03-acceptance-recovery-and-evidence.md)
 5. [Implementation, authorization, and approval](04-implementation-authorization-and-approval.md)
+6. [Gate 4B external evaluation specification](../gate-4b/README.md)
 
 ## Gate 4A public boundary
 
