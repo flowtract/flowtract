@@ -91,14 +91,14 @@ action evidence.
 
 ## Approval record
 
-| Field             | Value                           |
-| ----------------- | ------------------------------- |
-| Decision          | Pending repository-owner review |
-| Approved by       | Pending                         |
-| Approval date     | Pending                         |
-| Approved revision | Pending                         |
-| Authorization     | Pending                         |
+| Field             | Value                                                                  |
+| ----------------- | ---------------------------------------------------------------------- |
+| Decision          | Approved                                                               |
+| Approved by       | `iamprasanna-dev`                                                      |
+| Approval date     | 2026-08-12                                                             |
+| Approved revision | `a46d365c5a0d630914909b6254691780e048317c`                             |
+| Authorization     | Gate 4B repository implementation and private starter preparation only |
 
-Runtime, intake, starter, and launch implementation must not continue past the
-specification checkpoint until this record references the exact approved signed
-revision.
+This approval does not authorize PR merge, public starter conversion, labels,
+milestones, announcements, direct outreach, npm publication, or a Gate 4B
+market verdict.
