@@ -1,7 +1,7 @@
 # Flowtract
 
-> **Gate 4A release candidate:** the core production-candidate proof is
-> accepted. Public `0.1.0` publication is pending exact-SHA release acceptance;
+> **Developer preview:** [`flowtract@0.1.0`](https://www.npmjs.com/package/flowtract)
+> is published with provenance and registry-consumer proof. Gate 4A is accepted;
 > Flowtract is not claimed as production- or enterprise-ready.
 
 **Test contracts in motion.**
@@ -30,10 +30,15 @@ The Gate 3 core production-candidate proof accepted through
 - executable packed documentation and IntelliSense coverage for every root export.
 
 Cucumber integration, the CLI, configuration-file loading, generators, command
-targeting, retries, and reporting remain future gates. Gate 4A prepares the
-developer-preview package and Gate 4B performs external evaluation. See the
+targeting, retries, and reporting remain future gates. Gate 4B now performs
+external evaluation of the published developer preview. See the
 [canonical v0.1 specification](docs/open-source/v0.1/README.md) for implemented
 behavior, target behavior, and non-goals.
+
+Install the published root package with `npm install flowtract`. The executable
+guides are deployed at the [Flowtract documentation site](https://flowtract.github.io/flowtract/),
+and immutable release evidence is attached to
+[`v0.1.0`](https://github.com/flowtract/flowtract/releases/tag/v0.1.0).
 
 ## Development
 
@@ -46,7 +51,7 @@ npm run type-matrix
 npm run clean-clone:check
 ```
 
-The workspace contains the public-package candidate and one private deferred
+The workspace contains the published root package and one private deferred
 package:
 
 ```text
@@ -55,8 +60,9 @@ packages/
 └── create-flowtract/
 ```
 
-Neither package is currently published. Only the `flowtract` root entry point
-is authorized for Gate 4A publication.
+Only `packages/flowtract` is published. `create-flowtract` remains private and
+unpublished, and the public package continues to expose only its root entry
+point.
 
 ## Community
 

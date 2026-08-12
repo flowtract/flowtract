@@ -1,10 +1,10 @@
 # Gate 4 — Developer Preview and Market Validation
 
-> **Status:** Approved; Gate 4A repository implementation in progress
+> **Status:** Gate 4A accepted; Gate 4B external evaluation next
 > **Baseline:** Gate 3 completion merge `d08c13055178d23cc4a381afccfff86907c11c68`
 > **Gate 4A target:** Publish and prove `flowtract@0.1.0` as a developer preview
 > **Gate 4B target:** Launch external market-gap evaluation after publication
-> **Product claim:** Not yet published, beta, production candidate, or production ready
+> **Product claim:** Published developer preview; not beta, production candidate, or production ready
 
 Gate 4 is split so release engineering does not wait for adoption evidence and
 adoption work does not weaken release safety:
@@ -45,9 +45,10 @@ Gate 4A changes release state, not the accepted runtime contract:
 Any required runtime or public-contract change stops Gate 4A and requires a
 separate approved specification amendment.
 
-Repository implementation is authorized against amended specification
-revision `72fa3dfbffd666d5d8d921fa089b1476ed4ba4d3`. Merge and every publication
-operation remain separately authorized.
+Repository implementation was authorized against amended specification
+revision `72fa3dfbffd666d5d8d921fa089b1476ed4ba4d3`. The implementation, separately
+authorized publication, release completion, documentation deployment, and
+post-release remediation are accepted in the completion record.
 
 ## Completion boundary
 
@@ -66,6 +67,10 @@ Gate 4A completes only when:
 
 Gate 4A does not complete Gate 4B and does not establish beta, production
 candidate, production-ready, or enterprise-ready evidence.
+
+All Gate 4A completion conditions passed on the immutable `03b2402` release
+source, followed by the accepted `cf1a386` release-tool remediation on
+protected `main`. Gate 4B is now the active market-validation gate.
 
 ## Explicit non-goals
 

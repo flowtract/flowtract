@@ -100,7 +100,7 @@ proof.
 
 ## Design partners
 
-After Gate 4A publishes `0.1.0`, Gate 4B recruits at least five TypeScript
+With Gate 4A and `0.1.0` published, Gate 4B recruits at least five TypeScript
 QA/backend teams. Partners receive no private feature entitlement. Their role
 is to:
 

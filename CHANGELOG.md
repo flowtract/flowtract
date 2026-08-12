@@ -63,6 +63,10 @@ migration guidance.
   release recovery, and the Gate 4B market-validation handoff.
 - Exact package-file and root-export snapshots, fail-closed release rehearsal,
   registry acceptance, Pages deployment, and three market-gap demonstrations.
+- Published and registry-proven `flowtract@0.1.0` developer preview with npm
+  provenance, immutable `v0.1.0` release evidence, deployed documentation, and
+  accepted ESM/CommonJS, TypeScript, peer, and authenticated Playwright
+  consumers.
 
 ### Fixed
 
@@ -81,16 +85,21 @@ migration guidance.
 - Refresh locked transitive `brace-expansion` and `nanoid` development packages
   after later advisories, restoring zero full-development audit findings without
   changing the manifest or runtime package.
+- Removed shell and environment-derived command execution from release tooling,
+  retained portable direct Node/npm execution, and restored safe post-release
+  publication rehearsal. PR #19 and its post-merge CodeQL proof closed the
+  resulting alert with zero open CodeQL alerts on `main`.
 
 ### Current limitations
 
-- Gate 3 core production-candidate proof is accepted at `9e6c991`; Gate 4A
-  developer-preview publication remains pending exact-SHA release acceptance.
+- Gate 4A is accepted: `flowtract@0.1.0` is published as a developer preview
+  with provenance, registry-consumer proof, an immutable release, and deployed
+  documentation. Gate 4B external evaluation is next.
 - Cucumber, CLI, generator, configuration discovery, command execution, and
   artifact behavior are deferred future designs and are not part of the `0.1`
   root-package compatibility promise.
 - The legacy prototype is retained privately as historical behavioral evidence.
-- No npm package or production- or enterprise-ready release exists. A
-  production-ready claim still requires at least three teams operating
-  Flowtract in production for at least 90 days and exercised support and
-  compatibility policies.
+- The npm package is a developer preview, not a production- or enterprise-ready
+  release. A production-ready claim still requires at least three teams
+  operating Flowtract in production for at least 90 days and exercised support
+  and compatibility policies.

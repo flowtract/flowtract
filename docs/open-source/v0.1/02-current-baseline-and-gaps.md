@@ -63,16 +63,16 @@ canonical specification. Gate 1 added package-consumer tests and a
 Windows/Ubuntu Node 22/24 CI definition. Gate 1.5 moved that foundation into a
 clean `flowtract/flowtract` repository. Gate 2 added the execution foundation
 without expanding into Cucumber, CLI, configuration-file loading, retry, or
-reporting. npm publication and trusted publishing remain future external
-actions.
+reporting.
 
-Gate 3 core production-candidate proof was accepted at `9e6c991`. Gate 4A is
-the next gate: separately approved developer-preview publication with
-provenance, registry-backed consumers, recovery procedures, and documentation
-deployment. Gate 4B begins external market validation after publication. The
-package remains private and unpublished. Cucumber, CLI, configuration loading,
-generators, retry, reporting, and command execution are deferred and require
-separate approved specifications.
+Gate 3 core production-candidate proof was accepted at `9e6c991`. Gate 4A was
+accepted on 2026-08-11: `flowtract@0.1.0` is public with npm provenance,
+registry-backed consumers, an immutable GitHub release, recovery procedures,
+and deployed documentation. The published package has 66 root exports, 84
+reviewed archive files, and zero runtime dependencies. Gate 4B external market
+validation is next. Cucumber, CLI, configuration loading, generators, retry,
+reporting, and command execution are deferred and require separate approved
+specifications.
 
 The remaining production-readiness gap is external and operational evidence:
 released-artifact use across at least two minor releases, at least three teams

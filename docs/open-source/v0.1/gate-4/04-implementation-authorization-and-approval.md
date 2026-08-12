@@ -138,5 +138,50 @@ require the later explicit authorizations described above.
 
 ## Completion record
 
-Pending implementation, publication, and final acceptance. Gate 4A is not
-complete merely because this specification or its implementation is merged.
+| Field                            | Recorded result                                                                                                                 |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Gate 4A developer preview        | Accepted                                                                                                                        |
+| Approved specification           | `72fa3dfbffd666d5d8d921fa089b1476ed4ba4d3`                                                                                      |
+| Implementation PR                | [PR #17](https://github.com/flowtract/flowtract/pull/17), merged as `7df8289f70750529a5ac7342b403ac4daa9a9c79`                  |
+| Release-source PR                | [PR #18](https://github.com/flowtract/flowtract/pull/18), merged as `03b2402f972852827a2b132bed2d2795439f0e88`                  |
+| Immutable release source and tag | `03b2402f972852827a2b132bed2d2795439f0e88`; `v0.1.0`                                                                            |
+| Post-release remediation         | [PR #19](https://github.com/flowtract/flowtract/pull/19), merged as `cf1a386ee0a8ea11b2e32934bb757d652ca36b21`                  |
+| Completion date                  | 2026-08-11                                                                                                                      |
+| Public package                   | [`flowtract@0.1.0`](https://www.npmjs.com/package/flowtract)                                                                    |
+| Final npm integrity              | `sha512-cW0mEo73qEgJzQ8jjos2SVRA2OvLxAk5v9k4osY1+o+zfiAy+V2OrBnm93BgvM6EuncJuJVF7M0A+Zvot+l4oA==`                               |
+| Provenance                       | [npm attestation](https://registry.npmjs.org/-/npm/v1/attestations/flowtract@0.1.0), SLSA provenance v1                         |
+| Package contract                 | 66 root exports; 84 reviewed archive files; zero runtime dependencies                                                           |
+| Registry consumers               | ESM, CommonJS, TypeScript ESM/CommonJS, peer matrix, and authenticated Playwright passed on Windows and Ubuntu                  |
+| GitHub release                   | [`v0.1.0`](https://github.com/flowtract/flowtract/releases/tag/v0.1.0), including tarball, CycloneDX SBOM, and release evidence |
+| Documentation                    | [Flowtract documentation](https://flowtract.github.io/flowtract/) deployed and live                                             |
+| Security                         | Production/full audits passed; final release uses OIDC; PR #19 closed CodeQL alert #15; zero open CodeQL alerts on `main`       |
+| Gate 3 regression baseline       | 134 tests; 90.84% statements, 94.00% lines, 96.09% functions, 85.53% branches                                                   |
+| Next gate                        | Gate 4B external market validation                                                                                              |
+
+### Durable release evidence
+
+- Bootstrap rehearsal: [run 31405129229](https://github.com/flowtract/flowtract/actions/runs/31405129229).
+- Bootstrap publication and registry acceptance: [run 31406726522](https://github.com/flowtract/flowtract/actions/runs/31406726522).
+- Final rehearsal: [run 31405132521](https://github.com/flowtract/flowtract/actions/runs/31405132521).
+- Final OIDC publication and Windows/Ubuntu registry acceptance: [run 31409852139](https://github.com/flowtract/flowtract/actions/runs/31409852139).
+- Documentation deployment: [run 31410405582](https://github.com/flowtract/flowtract/actions/runs/31410405582).
+- Post-remediation CI: [run 31456172317](https://github.com/flowtract/flowtract/actions/runs/31456172317).
+- Post-remediation CodeQL: [run 31456172178](https://github.com/flowtract/flowtract/actions/runs/31456172178).
+- Post-remediation Scorecard: [run 31456172172](https://github.com/flowtract/flowtract/actions/runs/31456172172).
+
+The bootstrap artifact `flowtract@0.1.0-rc.0` used integrity
+`sha512-fm5iB+jkvbjBs36lrFyj3HBiO4wb0w6WME77lhXpANU326VsCXdDAfwTDIONDOxVhK1uWZ7hCDGipafL4BvtMg==`.
+It is deprecated in favor of `0.1.0`; both `latest` and `next` resolve to
+`0.1.0`. The repository owner confirmed that the temporary bootstrap token was
+revoked, trusted publishing was configured, and token-based publication was
+disabled before the final OIDC release.
+
+Final verdict:
+
+`Gate 4A complete — flowtract@0.1.0 developer preview published and proven`
+
+This acceptance does not establish beta, production-candidate,
+production-ready, or enterprise-ready status. Gate 4B now evaluates the
+released package with external TypeScript QA and backend teams. Separately
+approved capability work may proceed while the longer production-maturity
+evidence track accumulates.
