@@ -21,6 +21,14 @@ The [market-gap proof](market-proof.md) contains three reproducible workflows
 and a factual comparison with responsibilities projects otherwise own around
 raw HTTP or Playwright request primitives.
 
+## Evaluate the developer preview
+
+Gate 4B is preparing a five-repository external cohort. Use the
+[evaluation guide](evaluate.md) to run the dedicated registry-backed starter,
+adapt one real authenticated workflow, and submit privacy-safe evidence. The
+cohort evaluates product value and developer experience; it does not claim
+production readiness.
+
 ## Links
 
 - [npm package](https://www.npmjs.com/package/flowtract)
@@ -29,3 +37,4 @@ raw HTTP or Playwright request primitives.
 - [support and issues](https://github.com/flowtract/flowtract/issues)
 - [security reporting](https://github.com/flowtract/flowtract/security/policy)
 - [Gate 4B feedback](feedback.md)
+- [Gate 4B evaluation](evaluate.md)

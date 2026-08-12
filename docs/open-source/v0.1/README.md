@@ -44,8 +44,9 @@ hosted services, or a low-code interface.
 11. [Gate 2 execution foundation](gate-2/README.md)
 12. [Gate 3 core production-candidate hardening](gate-3/README.md)
 13. [Gate 4 developer preview and market validation](gate-4/README.md)
-14. [Deferred Cucumber and CLI design](../future/cucumber-cli/README.md)
-15. [Command-target feasibility](../future/command-target/README.md)
+14. [Gate 4B external evaluation](gate-4b/README.md)
+15. [Deferred Cucumber and CLI design](../future/cucumber-cli/README.md)
+16. [Command-target feasibility](../future/command-target/README.md)
 
 ## Normative language
 

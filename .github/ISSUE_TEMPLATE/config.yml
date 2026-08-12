@@ -1,5 +1,14 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Gate 4B evaluation
+    url: https://github.com/flowtract/flowtract/issues/new?template=gate4b-evaluation.yml
+    about: Submit a structured, privacy-safe external evaluation.
+  - name: Usage questions
+    url: https://github.com/flowtract/flowtract/discussions/categories/q-a
+    about: Ask for help using the published developer preview.
+  - name: Ideas and use cases
+    url: https://github.com/flowtract/flowtract/discussions/categories/ideas
+    about: Discuss evidence-grounded product ideas before proposing implementation.
   - name: Security report
     url: https://github.com/flowtract/flowtract/security/advisories/new
     about: Report vulnerabilities privately through GitHub Security Advisories.

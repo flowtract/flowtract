@@ -46,6 +46,7 @@
     "release:registry:check": "node scripts/release-registry-check.mjs",
     "market-proof:check": "node scripts/market-proof-check.mjs",
     "docs:site:check": "node scripts/docs-site-check.mjs",
+    "gate4b:check": "node scripts/gate4b-check.mjs",
     "gate4:qa": "node scripts/gate4-qa.mjs",
     "gate3:qa": "node scripts/qa.mjs",
     "gate2:qa": "npm run gate3:qa",

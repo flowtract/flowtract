@@ -1,0 +1,155 @@
+name: Gate 4B evaluation
+description: Report an opt-in external Flowtract evaluation
+title: '[Evaluation]: '
+labels: ['evaluation', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for evaluating Flowtract. Do not include credentials, tokens, cookies, private source, endpoint identities, customer data, or proprietary payloads. Vulnerabilities belong in private vulnerability reporting, not this form.
+  - type: input
+    id: flowtract_version
+    attributes:
+      label: Flowtract version
+      value: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: node_version
+    attributes:
+      label: Node.js version
+      placeholder: 22.x or 24.x
+    validations:
+      required: true
+  - type: dropdown
+    id: operating_system
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - Linux
+        - macOS
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: workflow_category
+    attributes:
+      label: Repository or workflow category
+      options:
+        - QA or SDET automation
+        - Backend service testing
+        - CI smoke verification
+        - Internal API contract verification
+        - Other authenticated REST workflow
+    validations:
+      required: true
+  - type: checkboxes
+    id: eligibility
+    attributes:
+      label: External evaluation eligibility
+      options:
+        - label: The evaluated repository, service, or workflow is not controlled by a Flowtract maintainer.
+          required: true
+        - label: The intended real workflow uses authentication and state across more than one REST request.
+          required: true
+  - type: dropdown
+    id: starter_result
+    attributes:
+      label: Unchanged starter result
+      options:
+        - Passed
+        - Failed
+        - Not attempted
+    validations:
+      required: true
+  - type: input
+    id: starter_minutes
+    attributes:
+      label: First-success minutes after dependency installation
+      description: Enter a positive whole number, rounded up, or N/A when the starter did not pass.
+      placeholder: '7'
+    validations:
+      required: true
+  - type: dropdown
+    id: intervention
+    attributes:
+      label: Highest maintainer intervention used
+      options:
+        - None
+        - Documentation clarification
+        - Synchronous intervention
+        - Maintainer-authored code
+        - Abandoned
+    validations:
+      required: true
+  - type: dropdown
+    id: real_workflow
+    attributes:
+      label: Real authenticated workflow result
+      options:
+        - Passed
+        - Failed
+        - Not attempted
+    validations:
+      required: true
+  - type: dropdown
+    id: repeat_workflow
+    attributes:
+      label: Second distinct workflow result
+      options:
+        - Passed
+        - Failed
+        - Not attempted
+    validations:
+      required: true
+  - type: textarea
+    id: value
+    attributes:
+      label: Meaningful value
+      description: Without private details, did Flowtract reduce auth, state, cleanup, or contract-composition work?
+    validations:
+      required: true
+  - type: dropdown
+    id: retention
+    attributes:
+      label: Retention or reuse intent
+      options:
+        - Intend to retain or reuse
+        - Unsure
+        - Do not intend to retain or reuse
+    validations:
+      required: true
+  - type: textarea
+    id: friction
+    attributes:
+      label: Defects, documentation friction, and missing capabilities
+      description: Use redacted summaries. Link separate minimal bug reports where appropriate.
+    validations:
+      required: true
+  - type: input
+    id: support_effort
+    attributes:
+      label: Approximate support effort
+      placeholder: No help, one Q&A reply, 20 minutes live help, or similar
+    validations:
+      required: true
+  - type: dropdown
+    id: evidence_visibility
+    attributes:
+      label: Evidence and attribution permission
+      options:
+        - Public attribution to this GitHub account
+        - Anonymized public aggregate only
+        - No quotation; aggregate count only
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: I removed credentials, tokens, cookies, private source, endpoint identities, customer data, and proprietary payloads.
+          required: true
+        - label: I understand this issue is public and can withdraw future use of my evidence by closing it and notifying the maintainer.
+          required: true

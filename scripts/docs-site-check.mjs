@@ -11,7 +11,8 @@ const required = [
   'troubleshooting.md',
   'security.md',
   'market-proof.md',
-  'feedback.md'
+  'feedback.md',
+  'evaluate.md'
 ];
 const sources = new Map();
 for (const file of required) {

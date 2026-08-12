@@ -40,6 +40,14 @@ guides are deployed at the [Flowtract documentation site](https://flowtract.gith
 and immutable release evidence is attached to
 [`v0.1.0`](https://github.com/flowtract/flowtract/releases/tag/v0.1.0).
 
+## Evaluate Flowtract
+
+Gate 4B is preparing five external TypeScript QA and backend evaluations. The
+[evaluation guide](https://flowtract.github.io/flowtract/evaluate.html) uses a
+dedicated registry-backed starter, then asks evaluators to model one real
+authenticated workflow and, if useful, a second. Participation is opt-in and
+collects no product telemetry or analytics.
+
 ## Development
 
 Flowtract requires Node 22 or 24.

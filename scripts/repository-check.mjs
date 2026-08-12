@@ -21,6 +21,9 @@ const requiredPaths = [
   'release/package-files.json',
   'release/root-exports.json',
   'docs/site/index.md',
+  'docs/site/evaluate.md',
+  'docs/open-source/v0.1/gate-4b/evidence-ledger.md',
+  '.github/ISSUE_TEMPLATE/gate4b-evaluation.yml',
   'examples/market-gap/authenticated-workflow.mjs',
   'packages/flowtract/package.json',
   'packages/create-flowtract/package.json'
@@ -67,6 +70,7 @@ const expectedScripts = [
   'release:registry:check',
   'market-proof:check',
   'docs:site:check',
+  'gate4b:check',
   'gate4:qa',
   'gate3:qa',
   'gate2:qa',
