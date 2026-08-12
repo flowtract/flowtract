@@ -1,6 +1,6 @@
 # Flowtract Open-Source v0.1 Canonical Specification
 
-> **Status:** Gate 3 accepted; Gate 4A publication specification under review
+> **Status:** Gate 4A developer preview accepted; Gate 4B external evaluation next
 > **Product:** Flowtract
 > **Release target:** `0.1.0` developer preview
 > **Positioning:** Test contracts in motion.
@@ -85,8 +85,12 @@ matrix passed. Gate 3 was approved against substantive revision `2f9a50c` and
 accepted through [PR #11](https://github.com/flowtract/flowtract/pull/11) at
 merge revision `9e6c991` on 2026-08-02 after immutable Windows/Ubuntu soak,
 Windows/Ubuntu/macOS compatibility, package, security, and semantic acceptance.
-Gate 4A developer-preview publication is now specified separately from Gate 4B
-external market validation. Production-readiness evidence runs in parallel and
-gates only the production-ready label; it does not block evidence-driven
-capability work. Cucumber, CLI, command targeting, npm publication, and every
+Gate 4A developer-preview publication was accepted on 2026-08-11. The release
+source and immutable `v0.1.0` tag point to `03b2402`; the accepted release-tool
+remediation is on protected `main` at `cf1a386`. The npm package, provenance,
+registry consumers, GitHub release, and documentation deployment are recorded
+in the [Gate 4A completion record](gate-4/04-implementation-authorization-and-approval.md#completion-record).
+Gate 4B external market validation is next. Production-readiness evidence runs
+in parallel and gates only the production-ready label; it does not block
+evidence-driven capability work. Cucumber, CLI, command targeting, and every
 runtime expansion remain separately authorized.

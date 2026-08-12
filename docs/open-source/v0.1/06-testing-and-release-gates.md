@@ -90,17 +90,17 @@ production-ready claim was included.
 
 ### Gate 4A — developer preview publication
 
-This is now the next gate. Its separate specification may authorize repository
-release engineering, a controlled bootstrap prerelease, trusted publication of
-`flowtract@0.1.0`, registry-backed consumers, provenance, and deployed
-documentation. Specification approval does not itself authorize publication.
+Accepted on 2026-08-11: the controlled bootstrap prerelease, trusted OIDC
+publication of `flowtract@0.1.0`, registry-backed consumers, provenance,
+immutable release evidence, and deployed documentation passed. The completion
+record preserves the exact source, integrity, workflow, and recovery evidence.
 
 ### Gate 4B — external market validation
 
-After Gate 4A publication, recruit real TypeScript QA/backend repositories,
-measure first success and repeated workflow use, and resolve market-validation
-blockers. Gate 4B guides later capability gates but does not block the initial
-developer-preview publication.
+Recruit real TypeScript QA/backend repositories, measure first success and
+repeated workflow use, and resolve market-validation blockers against the
+published developer preview. Gate 4B guides later capability gates but does not
+retroactively gate the accepted developer-preview publication.
 
 ### Later evidence-gated capabilities
 

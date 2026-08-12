@@ -29,18 +29,19 @@ production ready.
 
 ### Gate 4A — developer preview publication
 
-This is the next gate, subject to its separate specification and explicit
-release authorization:
+Accepted on 2026-08-11:
 
-- publish the root package with provenance and documented limitations;
-- deploy documentation and executable examples;
-- prove clean consumers against the real registry artifact;
-- establish release, deprecation, rollback, and incident procedures;
-- publish a reproducible market-gap demonstration pack.
+- published the root package with provenance and documented limitations;
+- deployed documentation and executable examples;
+- proved clean consumers against the real registry artifact;
+- established release, deprecation, rollback, and incident procedures;
+- published a reproducible market-gap demonstration pack;
+- remediated post-release command portability and closed the CodeQL alert on
+  protected `main`.
 
 ### Gate 4B — external market validation
 
-After Gate 4A publication:
+This is the next active gate:
 
 - recruit at least five real-world repositories/design partners;
 - measure first-success time, repeated use, defects, support load, and missing
