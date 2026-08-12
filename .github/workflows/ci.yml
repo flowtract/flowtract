@@ -73,6 +73,7 @@ jobs:
         run: |
           npm run format:check
           npm run docs:site:check
+          npm run gate4b:check
           npm run repository:check
           git diff --check
 
@@ -92,7 +93,9 @@ jobs:
 
       - name: Validate documentation site
         if: ${{ needs.classify.outputs.full == 'true' }}
-        run: npm run docs:site:check
+        run: |
+          npm run docs:site:check
+          npm run gate4b:check
 
       - name: Scan complete repository history for credentials
         if: ${{ needs.classify.outputs.full == 'true' }}
