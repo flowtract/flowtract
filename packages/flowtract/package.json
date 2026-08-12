@@ -53,11 +53,11 @@
     "type-matrix": "node scripts/type-matrix.mjs"
   },
   "peerDependencies": {
-    "playwright": "^1.62.0",
+    "playwright": "^1.62.1",
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "playwright": "^1.62.0",
+    "playwright": "^1.62.1",
     "selfsigned": "^5.5.0",
     "zod": "^4.4.3"
   }
