@@ -1,6 +1,6 @@
 # Gate 4B — External Evaluation and Market Validation
 
-> **Status:** Specification pending repository-owner approval
+> **Status:** Approved; repository implementation and private starter preparation in progress
 > **Baseline:** Gate 4A completion merge `e98ac6ff021cd9d5c243268dedeb9fb30e70d010`
 > **Release under evaluation:** `flowtract@0.1.0`
 > **Target verdict:** Evidence-based market-wedge decision

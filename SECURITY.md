@@ -2,26 +2,25 @@
 
 ## Supported versions
 
-Flowtract has not yet published `0.1.0`. The current prototype is not supported
-for production use.
+Flowtract publishes `0.1.x` as a developer preview. It is not supported as a
+production- or enterprise-ready release.
 
-| Version               | Supported                  |
-| --------------------- | -------------------------- |
-| `main` before `0.1.0` | Best-effort security fixes |
-| `0.1.x`               | Planned after release      |
+| Version | Supported                                    |
+| ------- | -------------------------------------------- |
+| `0.1.x` | Latest patch receives best-effort fixes      |
+| `main`  | Development branch; no release support claim |
 
-After `0.1.0`, the latest minor line and its current patch release will receive
-security fixes. The policy will be updated before any support window changes.
+The latest `0.1.x` patch receives best-effort security fixes during developer
+preview. The policy will be updated before any support window changes.
 
 ## Reporting a vulnerability
 
 Do not create a public issue.
 
-Use GitHub private vulnerability reporting for the `flowtract/flowtract`
-repository after transfer. Until transfer, use private vulnerability reporting
-on the current repository if enabled. If it is unavailable, contact the
-repository owner through their GitHub profile and request a private reporting
-channel without disclosing vulnerability details publicly.
+Use [GitHub private vulnerability reporting](https://github.com/flowtract/flowtract/security/advisories/new)
+for the public `flowtract/flowtract` repository. If it is unavailable, contact
+the repository owner through their GitHub profile and request a private channel
+without disclosing vulnerability details publicly.
 
 Include:
 
