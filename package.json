@@ -67,7 +67,7 @@
     "publint": "^0.3.22",
     "rimraf": "^5.0.5",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   },
   "engines": {
     "node": "^22.13.0 || ^24.0.0",
